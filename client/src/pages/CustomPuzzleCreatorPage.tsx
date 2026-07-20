@@ -48,12 +48,13 @@ export function CustomPuzzleCreatorPage({ onSaved, onCancel }: CustomPuzzleCreat
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-semibold text-chain-locked">
-          Words (comma separated, first and last are the clues)
+          Words (comma separated, first and last are the clues). Each word plus the
+          next one should form a real two-word phrase.
           <textarea
             className="border-2 border-chain-purple/30 rounded-lg px-3 py-2"
             value={wordsInput}
             onChange={(e) => setWordsInput(e.target.value)}
-            placeholder="HOT, DOG, TAG, ALONG, SIDE, KICK"
+            placeholder="COFFEE, TABLE, SALT, SHAKER"
           />
         </label>
         {error && <p className="text-red-600 text-sm font-semibold">{error}</p>}

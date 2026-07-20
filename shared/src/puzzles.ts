@@ -1,102 +1,103 @@
 import type { Puzzle } from "./types.js";
 
-// Every chain below is manually verified link-by-link against real compound
-// words or common phrases (see docs/superpowers/specs for the verification
-// notes). Difficulty is driven primarily by length per product direction:
-// easy = 7 words (5 blanks), medium = 9 words (7 blanks), hard = 11 words
-// (9 blanks). Several medium/hard chains are deliberate extensions of an
-// easier chain in the same family (e.g. the "hotdog" chain grows from
-// kickstand -> bygone across tiers) so solving one primes intuition for the
-// next, without ever showing more than one puzzle at a time.
+// Every chain is a sequence of standalone words where each adjacent pair
+// forms a real, common compound word or two-word phrase (e.g. COFFEE +
+// TABLE = "coffee table", TABLE + SALT = "table salt") — the same format
+// used by published word-chain games like ChainWhich and Game On Family's
+// Word Chain. Several easy chains below are drawn directly from those
+// published puzzles; medium/hard chains extend a verified chain with
+// additional manually-checked links. Difficulty is driven primarily by
+// length: easy = 7 words (5 blanks), medium = 9 words (7 blanks), hard = 11
+// words (9 blanks).
 
 export const PUZZLE_LIBRARY: Puzzle[] = [
-  // --- Easy: 7 words, 5 blanks (~15s/blank + 30s buffer = 105s) ---
+  // --- Easy: 7 words, 5 blanks (105s) ---
   {
-    id: "hotdog-kickstand",
-    category: "Classics",
-    difficulty: "easy",
-    words: ["HOT", "DOG", "TAG", "ALONG", "SIDE", "KICK", "STAND"],
-    timeCapSeconds: 105,
-  },
-  {
-    id: "newspaper-shopping",
+    id: "surround-park",
     category: "Everyday",
     difficulty: "easy",
-    words: ["NEWS", "PAPER", "BACK", "GROUND", "WORK", "SHOP", "PING"],
+    words: ["SURROUND", "SOUND", "WAVE", "POOL", "CUE", "BALL", "PARK"],
     timeCapSeconds: 105,
   },
   {
-    id: "sunset-lesson",
-    category: "Everyday",
-    difficulty: "easy",
-    words: ["SUN", "SET", "BACK", "PACK", "AGE", "LESS", "ON"],
-    timeCapSeconds: 105,
-  },
-  {
-    id: "football-walkout",
+    id: "speaker-ticket",
     category: "Sports",
     difficulty: "easy",
-    words: ["FOOT", "BALL", "PARK", "WAY", "SIDE", "WALK", "OUT"],
+    words: ["SPEAKER", "STAND", "STILL", "WATER", "SKI", "LIFT", "TICKET"],
     timeCapSeconds: 105,
   },
   {
-    id: "cupcake-lineup",
-    category: "Food",
+    id: "canyon-bowl",
+    category: "Everyday",
     difficulty: "easy",
-    words: ["CUP", "CAKE", "WALK", "WAY", "SIDE", "LINE", "UP"],
+    words: ["CANYON", "WALL", "SHELF", "LIFE", "GUARD", "DOG", "BOWL"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "response-play",
+    category: "Sports",
+    difficulty: "easy",
+    words: ["RESPONSE", "TIME", "TABLE", "TOP", "HAT", "TRICK", "PLAY"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "thunder-point",
+    category: "School",
+    difficulty: "easy",
+    words: ["THUNDER", "STORM", "CLOUD", "COVER", "LETTER", "GRADE", "POINT"],
     timeCapSeconds: 105,
   },
 
   // --- Medium: 9 words, 7 blanks (135s) ---
   {
-    id: "hotdog-bygone",
-    category: "Classics",
+    id: "glove-clip",
+    category: "School",
     difficulty: "medium",
-    words: ["HOT", "DOG", "TAG", "ALONG", "SIDE", "KICK", "STAND", "BY", "GONE"],
+    words: ["GLOVE", "BOX", "SPRING", "BREAK", "IN", "LINE", "GRAPH", "PAPER", "CLIP"],
     timeCapSeconds: 135,
   },
   {
-    id: "downtown-lineup",
+    id: "orange-up",
+    category: "Food",
+    difficulty: "medium",
+    words: ["ORANGE", "JUICE", "BAR", "SOAP", "DISH", "TOWEL", "OFF", "LINE", "UP"],
+    timeCapSeconds: 135,
+  },
+  {
+    id: "tooth-screen",
     category: "Everyday",
     difficulty: "medium",
-    words: ["DOWN", "TOWN", "SHIP", "WRECK", "AGE", "LESS", "ON", "LINE", "UP"],
+    words: ["TOOTH", "BRUSH", "WORK", "SHOP", "FLOOR", "RUG", "PAD", "LOCK", "SCREEN"],
     timeCapSeconds: 135,
   },
   {
-    id: "overtime-stopwatch",
-    category: "School",
+    id: "mini-court",
+    category: "Sports",
     difficulty: "medium",
-    words: ["OVER", "TIME", "LINE", "UP", "GRADE", "SCHOOL", "BUS", "STOP", "WATCH"],
-    timeCapSeconds: 135,
-  },
-  {
-    id: "playground-lesson",
-    category: "School",
-    difficulty: "medium",
-    words: ["PLAY", "GROUND", "WORK", "OUT", "FIELD", "TRIP", "WIRE", "LESS", "ON"],
+    words: ["MINI", "GOLF", "BAG", "CHECK", "POINT", "BREAK", "FAST", "FOOD", "COURT"],
     timeCapSeconds: 135,
   },
 
   // --- Hard: 11 words, 9 blanks (165s) ---
   {
-    id: "overtime-doghouse",
-    category: "School",
-    difficulty: "hard",
-    words: ["OVER", "TIME", "LINE", "UP", "GRADE", "SCHOOL", "BUS", "STOP", "WATCH", "DOG", "HOUSE"],
-    timeCapSeconds: 165,
-  },
-  {
-    id: "downtown-sidewalk",
+    id: "tour-bar",
     category: "Everyday",
     difficulty: "hard",
-    words: ["DOWN", "TOWN", "SHIP", "WRECK", "AGE", "LESS", "ON", "LINE", "UP", "SIDE", "WALK"],
+    words: ["TOUR", "GUIDE", "DOG", "HOUSE", "BOAT", "RACE", "TRACK", "RECORD", "PLAYER", "PIANO", "BAR"],
     timeCapSeconds: 165,
   },
   {
-    id: "playground-lineup",
+    id: "train-week",
+    category: "Everyday",
+    difficulty: "hard",
+    words: ["TRAIN", "STATION", "HOUSE", "PARTY", "ANIMAL", "SHELTER", "DOG", "TAG", "TEAM", "SPIRIT", "WEEK"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "computer-credit",
     category: "School",
     difficulty: "hard",
-    words: ["PLAY", "GROUND", "WORK", "OUT", "FIELD", "TRIP", "WIRE", "LESS", "ON", "LINE", "UP"],
+    words: ["COMPUTER", "SCIENCE", "FAIR", "TRADE", "SCHOOL", "ZONE", "DEFENSE", "ATTORNEY", "GENERAL", "STORE", "CREDIT"],
     timeCapSeconds: 165,
   },
 ];
