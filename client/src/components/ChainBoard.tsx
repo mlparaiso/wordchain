@@ -46,7 +46,7 @@ export function ChainBoard({
         const cells: ChainCellData[] = Array.from({ length: row.length }, (_, i) => {
           if (row.isClue) return { letter: row.text?.[i], state: "locked" as const };
           if (revealed && i < revealed.length) {
-            return { letter: revealed[i], state: (solvedFully ? "solved" : "hinted") as const };
+            return { letter: revealed[i], state: solvedFully ? ("solved" as const) : ("hinted" as const) };
           }
           if (isActive && i < typed.length) return { letter: typed[i], state: "typing" as const };
           return { letter: undefined, state: "empty" as const };

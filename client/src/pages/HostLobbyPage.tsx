@@ -1,0 +1,93 @@
+import { useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import type { Puzzle, PlayerInfo } from "@wordchain/shared";
+import { getSocket } from "../socket.js";
+
+export interface HostLobbyPageProps {
+  roomCode: string;
+  playlist: Puzzle[];
+  onStarted: (puzzle: Puzzle) => void;
+}
+
+export function HostLobbyPage({ roomCode, playlist, onStarted }: HostLobbyPageProps) {
+  const [players, setPlayers] = useState<PlayerInfo[]>([]);
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    function upsertPlayer(player: PlayerInfo) {
+      setPlayers((prev) => {
+        const withoutExisting = prev.filter((p) => p.socketId !== player.socketId);
+        return [...withoutExisting, player];
+      });
+    }
+    function removePlayer(payload: { socketId: string }) {
+      setPlayers((prev) => prev.filter((p) => p.socketId !== payload.socketId));
+    }
+
+    socket.on("room:playerJoined", upsertPlayer);
+    socket.on("room:playerUpdated", upsertPlayer);
+    socket.on("room:playerLeft", removePlayer);
+
+    return () => {
+      socket.off("room:playerJoined");
+      socket.off("room:playerUpdated");
+      socket.off("room:playerLeft");
+    };
+  }, []);
+
+  function handleKick(socketId: string) {
+    getSocket().emit("host:kickPlayer", { socketId }, () => {});
+  }
+
+  function handleStart() {
+    getSocket().emit(
+      "host:startRound",
+      { puzzle: playlist[0], isLastRound: playlist.length === 1 },
+      () => {
+        onStarted(playlist[0]);
+      }
+    );
+  }
+
+  const joinUrl = `${window.location.origin}/join?code=${roomCode}`;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-8 flex flex-col items-center gap-6">
+      <h1 className="font-display text-2xl text-white font-extrabold">Room code</h1>
+      <div className="bg-white rounded-2xl p-6 flex flex-col items-center gap-3">
+        <p className="font-display text-4xl font-black text-chain-locked tracking-widest">{roomCode}</p>
+        <QRCodeSVG value={joinUrl} size={140} aria-label="Room QR code" />
+      </div>
+
+      <div className="bg-white/95 rounded-2xl p-6 w-full max-w-md">
+        <h2 className="font-display text-lg font-bold text-chain-locked mb-3">
+          Players ({players.length})
+        </h2>
+        <ul className="flex flex-col gap-2">
+          {players.map((player) => (
+            <li key={player.socketId} className="flex items-center justify-between">
+              <span className="text-chain-locked">{player.nickname}</span>
+              <button
+                type="button"
+                onClick={() => handleKick(player.socketId)}
+                aria-label={`Kick ${player.nickname}`}
+                className="text-red-600 text-sm font-semibold"
+              >
+                Kick
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleStart}
+        className="bg-chain-yellow shadow-[0_4px_0_#e0b800] rounded-full px-8 py-3 font-display font-extrabold text-chain-locked"
+      >
+        Start Game
+      </button>
+    </div>
+  );
+}

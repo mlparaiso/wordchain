@@ -36,7 +36,9 @@ describe("playTone", () => {
       close: vi.fn(),
     };
     // @ts-expect-error test double, not a full AudioContext
-    globalThis.AudioContext = vi.fn(() => audioContext);
+    globalThis.AudioContext = vi.fn(function AudioContextMock() {
+      return audioContext;
+    });
     return { audioContext, oscillator };
   }
 
