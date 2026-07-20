@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getActiveRowsFromBounds, type PublicBoardView, type PublicChainRow } from "@wordchain/shared";
 import { ChainRow, type ChainCellData } from "./ChainRow.js";
 
@@ -21,6 +21,7 @@ export function ChainBoard({
 }: ChainBoardProps) {
   const [typedByRow, setTypedByRow] = useState<Record<number, string>>({});
   const activeRows = getActiveRowsFromBounds(boardView.topSolved, boardView.bottomSolved);
+  const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   function handleChange(rowIndex: number, value: string, length: number) {
     const normalized = value.toUpperCase().slice(0, length);
@@ -53,10 +54,17 @@ export function ChainBoard({
         });
 
         return (
-          <div key={row.index} className="flex items-center gap-2">
+          <div
+            key={row.index}
+            className={`flex items-center gap-2${isActive ? " cursor-text" : ""}`}
+            onClick={isActive ? () => inputRefs.current[row.index]?.focus() : undefined}
+          >
             <ChainRow cells={cells} showHintButton={isActive} onHintClick={() => onHint(row.index)} />
             {isActive && (
               <input
+                ref={(el) => {
+                  inputRefs.current[row.index] = el;
+                }}
                 aria-label={`Guess for row ${row.index}`}
                 className="sr-only"
                 value={typed}

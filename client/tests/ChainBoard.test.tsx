@@ -33,6 +33,15 @@ describe("ChainBoard", () => {
     expect(hotCells.every((c) => c.getAttribute("data-state") === "locked")).toBe(true);
   });
 
+  it("focuses the hidden input when the visible cells of an active row are clicked", async () => {
+    render(<ChainBoard rows={ROWS} boardView={INITIAL_VIEW} onSubmitGuess={vi.fn()} onHint={vi.fn()} />);
+    const input = screen.getByLabelText("Guess for row 1");
+    expect(input).not.toHaveFocus();
+    const cellsForRow1 = screen.getAllByTestId("letter-cell").slice(3, 6);
+    await userEvent.click(cellsForRow1[0]);
+    expect(input).toHaveFocus();
+  });
+
   it("submits the typed guess for the active row on Enter", async () => {
     const onSubmitGuess = vi.fn();
     render(<ChainBoard rows={ROWS} boardView={INITIAL_VIEW} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />);
