@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { getSocket } from "../socket.js";
+import { getSessionToken, getSocket } from "../socket.js";
 
 export interface JoinedData {
+  code: string;
   nickname: string;
   mode: "individual" | "team";
   teams: { id: string; name: string }[];
@@ -34,12 +35,14 @@ export function JoinPage({ onJoined }: JoinPageProps) {
 
   function handleJoin() {
     setError(null);
+    const trimmedCode = code.trim().toUpperCase();
     getSocket().emit(
       "player:joinRoom",
-      { code: code.trim().toUpperCase(), nickname: nickname.trim() },
+      { code: trimmedCode, nickname: nickname.trim(), sessionToken: getSessionToken() },
       (response: JoinedData & { success: boolean; error?: string }) => {
         if (response.success) {
           onJoined({
+            code: trimmedCode,
             nickname: nickname.trim(),
             mode: response.mode,
             teams: response.teams,

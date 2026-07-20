@@ -11,7 +11,16 @@ export class RoomManager {
 
   createRoom(hostSocketId: string): Room {
     let code = generateRoomCode(this.randomFn);
+    let attempts = 0;
     while (this.rooms.has(code)) {
+      attempts++;
+      if (attempts > 100) {
+        // The adjective/number code space is small (720 combinations) and could theoretically
+        // be exhausted by long-lived rooms; fall back to a wider, effectively-unique code
+        // rather than looping forever.
+        code = `${generateRoomCode(this.randomFn)}-${Math.floor(this.randomFn() * 10000)}`;
+        break;
+      }
       code = generateRoomCode(this.randomFn);
     }
     const room = new Room(code, hostSocketId);

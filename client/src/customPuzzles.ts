@@ -4,7 +4,13 @@ const STORAGE_KEY = "wordchain:customPuzzles";
 
 export function loadCustomPuzzles(): Puzzle[] {
   const raw = localStorage.getItem(STORAGE_KEY);
-  return raw ? (JSON.parse(raw) as Puzzle[]) : [];
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Puzzle[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function saveCustomPuzzle(puzzle: Puzzle): void {

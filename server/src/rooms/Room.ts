@@ -6,6 +6,7 @@ export interface RoundState {
   entrantChains: Map<string, ChainState>;
   finishedAt: Map<string, number>;
   isLastRound: boolean;
+  timeoutHandle: ReturnType<typeof setTimeout> | null;
 }
 
 export class Room {
@@ -16,20 +17,25 @@ export class Room {
   currentRound: RoundState | null = null;
   totalPoints: Map<string, number> = new Map();
   private players = new Map<string, PlayerInfo>();
+  // Kept out of PlayerInfo (and therefore out of every room:player* broadcast) so a
+  // player's reconnect token is never visible to other clients in the room.
+  private sessionTokens = new Map<string, string>();
 
   constructor(code: string, hostSocketId: string) {
     this.code = code;
     this.hostSocketId = hostSocketId;
   }
 
-  addPlayer(socketId: string, nickname: string): PlayerInfo {
+  addPlayer(socketId: string, nickname: string, sessionToken?: string): PlayerInfo {
     const player: PlayerInfo = { socketId, nickname, teamId: null, connected: true };
     this.players.set(socketId, player);
+    if (sessionToken) this.sessionTokens.set(socketId, sessionToken);
     return player;
   }
 
   removePlayer(socketId: string): void {
     this.players.delete(socketId);
+    this.sessionTokens.delete(socketId);
   }
 
   setConnected(socketId: string, connected: boolean): void {
@@ -50,9 +56,10 @@ export class Room {
     return [...this.players.values()];
   }
 
-  reconnectPlayer(nickname: string, newSocketId: string): PlayerInfo | null {
+  reconnectPlayer(nickname: string, newSocketId: string, sessionToken?: string): PlayerInfo | null {
     const existingEntry = [...this.players.entries()].find(
-      ([, p]) => p.nickname === nickname && !p.connected
+      ([socketId, p]) =>
+        p.nickname === nickname && !p.connected && this.sessionTokens.get(socketId) === sessionToken
     );
     if (!existingEntry) return null;
 
@@ -60,6 +67,10 @@ export class Room {
     this.players.delete(oldSocketId);
     const reconnected: PlayerInfo = { ...oldPlayer, socketId: newSocketId, connected: true };
     this.players.set(newSocketId, reconnected);
+
+    const token = this.sessionTokens.get(oldSocketId);
+    this.sessionTokens.delete(oldSocketId);
+    if (token) this.sessionTokens.set(newSocketId, token);
 
     if (this.currentRound) {
       const chainState = this.currentRound.entrantChains.get(oldSocketId);
@@ -96,7 +107,14 @@ export class Room {
         entrantChains.set(entrantId, createChainState(puzzle.words));
       }
     }
-    this.currentRound = { puzzle, startedAt: Date.now(), entrantChains, finishedAt: new Map(), isLastRound };
+    this.currentRound = {
+      puzzle,
+      startedAt: Date.now(),
+      entrantChains,
+      finishedAt: new Map(),
+      isLastRound,
+      timeoutHandle: null,
+    };
   }
 
   getDisplayName(entrantId: string): string {

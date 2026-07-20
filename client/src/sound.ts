@@ -15,10 +15,22 @@ export function setSoundEnabled(enabled: boolean): void {
   localStorage.setItem(STORAGE_KEY, String(enabled));
 }
 
+let sharedAudioContext: AudioContext | null = null;
+
+function getAudioContext(): AudioContext {
+  if (!sharedAudioContext) sharedAudioContext = new AudioContext();
+  return sharedAudioContext;
+}
+
+/** Test-only hook: forces the next playTone call to construct a fresh AudioContext. */
+export function __resetAudioContextForTests(): void {
+  sharedAudioContext = null;
+}
+
 export function playTone(kind: "correct" | "wrong" | "complete"): void {
   if (!isSoundEnabled()) return;
 
-  const audioContext = new AudioContext();
+  const audioContext = getAudioContext();
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
 

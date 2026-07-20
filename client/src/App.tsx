@@ -1,8 +1,16 @@
-import { useState } from "react";
-import type { GameMode, Puzzle, PublicBoardView, RoundResult, RoundStartedPayload, TeamInfo } from "@wordchain/shared";
+import { useEffect, useState } from "react";
+import type {
+  GameMode,
+  PlayerInfo,
+  Puzzle,
+  PublicBoardView,
+  RoundResult,
+  RoundStartedPayload,
+  TeamInfo,
+} from "@wordchain/shared";
 import { toPublicRows } from "@wordchain/shared";
-import { getSocket } from "./socket.js";
-import { JoinPage } from "./pages/JoinPage.js";
+import { getSessionToken, getSocket } from "./socket.js";
+import { JoinPage, type JoinedData } from "./pages/JoinPage.js";
 import { HostSetupPage } from "./pages/HostSetupPage.js";
 import { CustomPuzzleCreatorPage } from "./pages/CustomPuzzleCreatorPage.js";
 import { HostLobbyPage } from "./pages/HostLobbyPage.js";
@@ -36,6 +44,7 @@ export default function App() {
   const [playlist, setPlaylist] = useState<Puzzle[]>([]);
   const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
   const [teams, setTeams] = useState<TeamInfo[]>([]);
+  const [knownPlayers, setKnownPlayers] = useState<PlayerInfo[]>([]);
   const [myTeamId, setMyTeamId] = useState<string | null>(null);
   const [roundData, setRoundData] = useState<RoundStartedPayload | null>(null);
   const [reconnectBoardView, setReconnectBoardView] = useState<PublicBoardView | null>(null);
@@ -44,6 +53,50 @@ export default function App() {
   );
   const [soloPuzzle, setSoloPuzzle] = useState<Puzzle | null>(null);
   const [soloSummary, setSoloSummary] = useState<SoloRunSummary | null>(null);
+  const [playerSession, setPlayerSession] = useState<{ code: string; nickname: string } | null>(null);
+
+  // Socket.IO auto-reconnects the transport after a drop (phone lock, wifi blip), but issues
+  // a new socket.id and doesn't know which room/nickname we had. Without this, a player who
+  // gets reconnected silently loses their room membership until they manually rejoin.
+  useEffect(() => {
+    if (!playerSession) return;
+    const socket = getSocket();
+    function handleReconnect() {
+      if (!playerSession) return;
+      socket.emit(
+        "player:joinRoom",
+        { code: playerSession.code, nickname: playerSession.nickname, sessionToken: getSessionToken() },
+        (response: JoinedData & { success: boolean }) => {
+          if (!response.success) return;
+          setMode(response.mode);
+          setTeams(response.teams);
+          if (response.activeRound) {
+            setRoundData(response.activeRound as RoundStartedPayload);
+            setReconnectBoardView((response.boardView as PublicBoardView) ?? null);
+            setScreen({ name: "round", role: "player" });
+          }
+        }
+      );
+    }
+    socket.io.on("reconnect", handleReconnect);
+    return () => {
+      socket.io.off("reconnect", handleReconnect);
+    };
+  }, [playerSession]);
+
+  // If the host's connection drops, the server tears the room down (it has no host-reconnect
+  // path today) and tells whoever's left so they aren't stuck staring at a dead screen.
+  useEffect(() => {
+    const socket = getSocket();
+    function handleHostLeft() {
+      setPlayerSession(null);
+      setScreen({ name: "landing" });
+    }
+    socket.on("room:hostLeft", handleHostLeft);
+    return () => {
+      socket.off("room:hostLeft");
+    };
+  }, []);
 
   if (screen.name === "landing") {
     return (
@@ -83,6 +136,7 @@ export default function App() {
     return (
       <JoinPage
         onJoined={(data) => {
+          setPlayerSession({ code: data.code, nickname: data.nickname });
           setMode(data.mode);
           setTeams(data.teams);
           if (data.activeRound) {
@@ -125,8 +179,9 @@ export default function App() {
       <HostLobbyPage
         roomCode={roomCode}
         playlist={playlist}
-        onStarted={(puzzle) => {
+        onStarted={(puzzle, players) => {
           setCurrentPuzzleIndex(0);
+          setKnownPlayers(players);
           setRoundData({
             puzzleId: puzzle.id,
             category: puzzle.category,
@@ -177,6 +232,7 @@ export default function App() {
         roundData={roundData}
         mode={mode}
         teams={teams}
+        players={knownPlayers}
         onResults={(payload) => {
           setLastResults(payload);
           setScreen({ name: "results", role: "host" });

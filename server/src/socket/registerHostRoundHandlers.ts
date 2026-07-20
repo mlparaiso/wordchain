@@ -20,6 +20,10 @@ export function registerHostRoundHandlers(io: Server, socket: Socket, roomManage
         callback({ success: false, error: "Only the host can start a round" });
         return;
       }
+      if (room.currentRound) {
+        callback({ success: false, error: "A round is already in progress" });
+        return;
+      }
       const errors = validatePuzzleWords(payload.puzzle.words);
       if (errors.length > 0) {
         callback({ success: false, error: errors[0].message });
@@ -37,7 +41,10 @@ export function registerHostRoundHandlers(io: Server, socket: Socket, roomManage
         isLastRound: payload.isLastRound ?? false,
       });
 
-      setTimeout(() => endRound(io, room), payload.puzzle.timeCapSeconds * 1000);
+      room.currentRound!.timeoutHandle = setTimeout(
+        () => endRound(io, room),
+        payload.puzzle.timeCapSeconds * 1000
+      );
       callback({ success: true });
     }
   );

@@ -97,6 +97,33 @@ describe("player:joinRoom", () => {
     secondConnection.close();
   });
 
+  it("does not merge a same-nickname join into a disconnected player's slot when the session token doesn't match", async () => {
+    const { url, code, roomManager } = await setup();
+    const firstConnection: Socket = ioClient(url);
+    await new Promise<void>((resolve) => firstConnection.on("connect", resolve));
+    await new Promise<void>((resolve) =>
+      firstConnection.emit("player:joinRoom", { code, nickname: "Alex", sessionToken: "alex-token" }, () => resolve())
+    );
+    firstConnection.close();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    roomManager.getRoom(code)!.setConnected(roomManager.getRoom(code)!.getPlayers()[0].socketId, false);
+
+    const impostorConnection: Socket = ioClient(url);
+    await new Promise<void>((resolve) => impostorConnection.on("connect", resolve));
+    const response = await new Promise<{ success: boolean }>((resolve) => {
+      impostorConnection.emit(
+        "player:joinRoom",
+        { code, nickname: "Alex", sessionToken: "someone-elses-token" },
+        resolve
+      );
+    });
+
+    expect(response.success).toBe(true);
+    // Treated as a brand new player rather than reclaiming Alex's disconnected slot.
+    expect(roomManager.getRoom(code)?.getPlayers()).toHaveLength(2);
+    impostorConnection.close();
+  });
+
   it("includes the active round and the player's own board when reconnecting mid-round", async () => {
     const { url, code, roomManager } = await setup();
     const firstConnection: Socket = ioClient(url);

@@ -42,6 +42,44 @@ describe("ChainBoard", () => {
     expect(input).toHaveFocus();
   });
 
+  it("pre-fills the input with a hinted letter so continuing to type appends after it", async () => {
+    const onSubmitGuess = vi.fn();
+    const view: PublicBoardView = {
+      topSolved: 0,
+      bottomSolved: 5,
+      revealedText: { 1: "D" },
+      penaltySeconds: 5,
+    };
+    render(<ChainBoard rows={ROWS} boardView={view} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />);
+
+    const input = screen.getByLabelText("Guess for row 1") as HTMLInputElement;
+    expect(input.value).toBe("D");
+
+    await userEvent.type(input, "OG{enter}");
+    expect(onSubmitGuess).toHaveBeenCalledWith(1, "DOG");
+  });
+
+  it("re-syncs the typed prefix if a hint reveals a letter the player had gotten wrong", async () => {
+    const onSubmitGuess = vi.fn();
+    const { rerender } = render(
+      <ChainBoard rows={ROWS} boardView={INITIAL_VIEW} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />
+    );
+
+    const input = screen.getByLabelText("Guess for row 1") as HTMLInputElement;
+    await userEvent.type(input, "DX");
+    expect(input.value).toBe("DX");
+
+    const hintedView: PublicBoardView = {
+      topSolved: 0,
+      bottomSolved: 5,
+      revealedText: { 1: "DO" },
+      penaltySeconds: 5,
+    };
+    rerender(<ChainBoard rows={ROWS} boardView={hintedView} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />);
+
+    expect(screen.getByLabelText("Guess for row 1")).toHaveValue("DO");
+  });
+
   it("submits the typed guess for the active row on Enter", async () => {
     const onSubmitGuess = vi.fn();
     render(<ChainBoard rows={ROWS} boardView={INITIAL_VIEW} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />);

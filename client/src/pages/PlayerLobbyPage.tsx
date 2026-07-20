@@ -14,11 +14,18 @@ export function PlayerLobbyPage({ mode, teams, onTeamSelected, onRoundStarted }:
 
   useEffect(() => {
     const socket = getSocket();
-    socket.on("round:started", onRoundStarted);
+    function handleRoundStarted(payload: RoundStartedPayload) {
+      // In team mode, a round can start before every player has picked a team (e.g. the
+      // host clicks Start Game while someone is still choosing). Following them into the
+      // round would give them no team/board at all, so keep them here until they pick one.
+      if (mode === "team" && selectedTeamId === null) return;
+      onRoundStarted(payload);
+    }
+    socket.on("round:started", handleRoundStarted);
     return () => {
       socket.off("round:started");
     };
-  }, [onRoundStarted]);
+  }, [mode, selectedTeamId, onRoundStarted]);
 
   function selectTeam(teamId: string) {
     getSocket().emit("player:selectTeam", { teamId }, () => {

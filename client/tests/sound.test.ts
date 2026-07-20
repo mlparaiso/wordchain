@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { playTone, isSoundEnabled, setSoundEnabled } from "../src/sound.js";
+import { playTone, isSoundEnabled, setSoundEnabled, __resetAudioContextForTests } from "../src/sound.js";
 
 describe("sound settings", () => {
   beforeEach(() => {
@@ -44,6 +44,7 @@ describe("playTone", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    __resetAudioContextForTests();
   });
 
   it("plays a tone when sound is enabled", () => {
@@ -59,5 +60,14 @@ describe("playTone", () => {
     setSoundEnabled(false);
     playTone("correct");
     expect(oscillator.start).not.toHaveBeenCalled();
+  });
+
+  it("reuses a single AudioContext across multiple tones instead of leaking a new one each time", () => {
+    installAudioContextMock();
+    setSoundEnabled(true);
+    playTone("correct");
+    playTone("wrong");
+    playTone("complete");
+    expect(globalThis.AudioContext).toHaveBeenCalledTimes(1);
   });
 });

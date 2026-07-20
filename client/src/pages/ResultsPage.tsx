@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import type { RoundResult, RoundStartedPayload } from "@wordchain/shared";
 import { getSocket } from "../socket.js";
@@ -26,6 +26,8 @@ function LeaderboardRow({ rank, displayName, total }: { rank: number; displayNam
 }
 
 export function ResultsPage({ results, totals, role, isLastRound, onAdvance, onNextRoundStarted }: ResultsPageProps) {
+  const [advancing, setAdvancing] = useState(false);
+
   useEffect(() => {
     if (role !== "player" || !onNextRoundStarted) return;
     const socket = getSocket();
@@ -64,8 +66,13 @@ export function ResultsPage({ results, totals, role, isLastRound, onAdvance, onN
       {role === "host" && (
         <button
           type="button"
-          onClick={onAdvance}
-          className="bg-chain-yellow shadow-[0_4px_0_#e0b800] rounded-full px-8 py-3 font-display font-extrabold text-chain-locked"
+          disabled={advancing}
+          onClick={() => {
+            if (advancing) return;
+            setAdvancing(true);
+            onAdvance?.();
+          }}
+          className="bg-chain-yellow disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_0_#e0b800] rounded-full px-8 py-3 font-display font-extrabold text-chain-locked"
         >
           {isLastRound ? "End Session" : "Next Round"}
         </button>

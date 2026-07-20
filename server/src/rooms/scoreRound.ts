@@ -48,6 +48,8 @@ export function computeRoundResults(room: Room): RoundResult[] {
 export function endRound(io: Server, room: Room): void {
   if (!room.currentRound) return; // already ended (manual end raced with the auto-timer)
 
+  if (room.currentRound.timeoutHandle) clearTimeout(room.currentRound.timeoutHandle);
+
   const results = computeRoundResults(room);
   for (const result of results) {
     const previous = room.totalPoints.get(result.entrantId) ?? 0;

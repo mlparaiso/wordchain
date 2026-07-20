@@ -6,11 +6,12 @@ import { getSocket } from "../socket.js";
 export interface HostLobbyPageProps {
   roomCode: string;
   playlist: Puzzle[];
-  onStarted: (puzzle: Puzzle) => void;
+  onStarted: (puzzle: Puzzle, players: PlayerInfo[]) => void;
 }
 
 export function HostLobbyPage({ roomCode, playlist, onStarted }: HostLobbyPageProps) {
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     const socket = getSocket();
@@ -41,11 +42,17 @@ export function HostLobbyPage({ roomCode, playlist, onStarted }: HostLobbyPagePr
   }
 
   function handleStart() {
+    if (starting) return;
+    setStarting(true);
     getSocket().emit(
       "host:startRound",
       { puzzle: playlist[0], isLastRound: playlist.length === 1 },
-      () => {
-        onStarted(playlist[0]);
+      (response: { success: boolean }) => {
+        if (response.success) {
+          onStarted(playlist[0], players);
+        } else {
+          setStarting(false);
+        }
       }
     );
   }
@@ -84,7 +91,8 @@ export function HostLobbyPage({ roomCode, playlist, onStarted }: HostLobbyPagePr
       <button
         type="button"
         onClick={handleStart}
-        className="bg-chain-yellow shadow-[0_4px_0_#e0b800] rounded-full px-8 py-3 font-display font-extrabold text-chain-locked"
+        disabled={starting}
+        className="bg-chain-yellow disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_0_#e0b800] rounded-full px-8 py-3 font-display font-extrabold text-chain-locked"
       >
         Start Game
       </button>

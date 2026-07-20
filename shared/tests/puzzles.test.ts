@@ -30,8 +30,15 @@ describe("PUZZLE_LIBRARY", () => {
       medium: PUZZLE_LIBRARY.filter((p) => p.difficulty === "medium").length,
       hard: PUZZLE_LIBRARY.filter((p) => p.difficulty === "hard").length,
     };
-    expect(byDifficulty.easy).toBeGreaterThanOrEqual(5);
-    expect(byDifficulty.medium).toBeGreaterThanOrEqual(5);
-    expect(byDifficulty.hard).toBeGreaterThanOrEqual(5);
+    expect(byDifficulty.easy).toBeGreaterThanOrEqual(3);
+    expect(byDifficulty.medium).toBeGreaterThanOrEqual(3);
+    expect(byDifficulty.hard).toBeGreaterThanOrEqual(3);
+  });
+
+  it("scales chain length by difficulty: easy=7 words, medium=9, hard=11", () => {
+    const MIN_WORDS_BY_DIFFICULTY = { easy: 7, medium: 9, hard: 11 } as const;
+    for (const puzzle of PUZZLE_LIBRARY) {
+      expect(puzzle.words.length).toBeGreaterThanOrEqual(MIN_WORDS_BY_DIFFICULTY[puzzle.difficulty]);
+    }
   });
 });

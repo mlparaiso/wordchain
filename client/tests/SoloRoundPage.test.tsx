@@ -56,7 +56,8 @@ describe("SoloRoundPage", () => {
     render(<SoloRoundPage puzzle={PUZZLE} onFinished={onFinished} onQuit={vi.fn()} />);
 
     await userEvent.click(screen.getByRole("button", { name: "💡" }));
-    await userEvent.type(screen.getByLabelText("Guess for row 1"), "DOG{enter}");
+    // The hint pre-fills "D" into the guess, so only the remaining letters need typing.
+    await userEvent.type(screen.getByLabelText("Guess for row 1"), "OG{enter}");
 
     expect(onFinished.mock.calls[0][0].hintsUsed).toBe(1);
   });

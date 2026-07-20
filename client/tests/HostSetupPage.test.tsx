@@ -1,8 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { PUZZLE_LIBRARY } from "@wordchain/shared";
+import { PUZZLE_LIBRARY, type Puzzle } from "@wordchain/shared";
 import { HostSetupPage } from "../src/pages/HostSetupPage.js";
+
+function labelFor(puzzle: Puzzle): RegExp {
+  const first = puzzle.words[0];
+  const last = puzzle.words[puzzle.words.length - 1];
+  return new RegExp(`^${puzzle.category} — ${first}\\.\\.\\.${last}$`);
+}
 
 const emitMock = vi.fn(
   (_event: string, _payload: unknown, callback: (response: { code: string }) => void) =>
@@ -27,7 +33,7 @@ describe("HostSetupPage", () => {
     const onRoomCreated = vi.fn();
     render(<HostSetupPage onOpenCreator={vi.fn()} onRoomCreated={onRoomCreated} />);
 
-    await userEvent.click(screen.getByLabelText(new RegExp(`^${PUZZLE_LIBRARY[0].category} — ${PUZZLE_LIBRARY[0].words[0]}`)));
+    await userEvent.click(screen.getByLabelText(labelFor(PUZZLE_LIBRARY[0])));
     await userEvent.click(screen.getByRole("button", { name: /create room/i }));
 
     expect(emitMock).toHaveBeenCalledWith(
@@ -50,7 +56,7 @@ describe("HostSetupPage", () => {
     expect(screen.getByLabelText(/team names/i)).toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText(/team names/i), "Red Team, Blue Team");
-    await userEvent.click(screen.getByLabelText(new RegExp(`^${PUZZLE_LIBRARY[0].category} — ${PUZZLE_LIBRARY[0].words[0]}`)));
+    await userEvent.click(screen.getByLabelText(labelFor(PUZZLE_LIBRARY[0])));
     await userEvent.click(screen.getByRole("button", { name: /create room/i }));
 
     expect(emitMock).toHaveBeenCalledWith(

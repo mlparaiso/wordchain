@@ -158,4 +158,30 @@ describe("Room.reconnectPlayer", () => {
     room.addPlayer("old-socket", "Alex");
     expect(room.reconnectPlayer("Alex", "new-socket")).toBeNull();
   });
+
+  it("does not let a different person with the same nickname hijack a disconnected player's session", () => {
+    const room = new Room("BLUE-42", "host-1");
+    room.addPlayer("old-socket", "Alex", "alex-session-token");
+    room.setConnected("old-socket", false);
+
+    // A different browser tab joining with the same nickname has its own session token.
+    const hijackAttempt = room.reconnectPlayer("Alex", "attacker-socket", "different-token");
+    expect(hijackAttempt).toBeNull();
+  });
+
+  it("reconnects successfully when the session token matches", () => {
+    const room = new Room("BLUE-42", "host-1");
+    room.addPlayer("old-socket", "Alex", "alex-session-token");
+    room.setConnected("old-socket", false);
+
+    const reconnected = room.reconnectPlayer("Alex", "new-socket", "alex-session-token");
+    expect(reconnected).toMatchObject({ socketId: "new-socket", nickname: "Alex", connected: true });
+  });
+
+  it("never exposes the session token via getPlayers (it must stay server-side only)", () => {
+    const room = new Room("BLUE-42", "host-1");
+    room.addPlayer("p1", "Alex", "secret-token");
+    expect(room.getPlayers()[0]).not.toHaveProperty("sessionToken");
+    expect(JSON.stringify(room.getPlayers())).not.toContain("secret-token");
+  });
 });

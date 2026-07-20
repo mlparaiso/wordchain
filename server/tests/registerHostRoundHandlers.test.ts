@@ -84,6 +84,18 @@ describe("host:startRound", () => {
 
     expect(response.success).toBe(false);
   });
+
+  it("rejects starting a round while one is already in progress (e.g. a double-clicked Start button)", async () => {
+    const { host } = await setupRoomWithHostAndPlayer();
+    await new Promise<void>((resolve) => host.emit("host:startRound", { puzzle: PUZZLE }, () => resolve()));
+
+    const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+      host.emit("host:startRound", { puzzle: PUZZLE }, resolve);
+    });
+
+    expect(response.success).toBe(false);
+    expect(response.error).toMatch(/already in progress/i);
+  });
 });
 
 describe("round ending", () => {
@@ -128,6 +140,45 @@ describe("round ending", () => {
     expect(response.success).toBe(true);
     expect((await resultsPromise).results).toHaveLength(1);
   });
+
+  it("does not let a manually-ended round's stale auto-timer prematurely end the next round", async () => {
+    const { httpServer, io, roomManager } = createServer();
+    await new Promise<void>((resolve) => httpServer.listen(0, resolve));
+    const address = httpServer.address();
+    if (typeof address !== "object" || address === null) throw new Error("no port");
+    const url = `http://localhost:${address.port}`;
+
+    const host: Socket = ioClient(url);
+    await new Promise<void>((resolve) => host.on("connect", resolve));
+    const { code } = await new Promise<{ code: string }>((resolve) => {
+      host.emit("host:createRoom", { mode: "individual" }, resolve);
+    });
+    const player: Socket = ioClient(url);
+    await new Promise<void>((resolve) => player.on("connect", resolve));
+    await new Promise<void>((resolve) => player.emit("player:joinRoom", { code, nickname: "Alex" }, () => resolve()));
+
+    cleanup = () => {
+      host.close();
+      player.close();
+      io.close();
+      httpServer.close();
+    };
+
+    // Start round A with a short time cap, then manually end it early.
+    await new Promise<void>((resolve) =>
+      host.emit("host:startRound", { puzzle: { ...PUZZLE, id: "round-a", timeCapSeconds: 0.2 } }, () => resolve())
+    );
+    await new Promise<void>((resolve) => host.emit("host:endRound", {}, () => resolve()));
+
+    // Start round B immediately after, before round A's original timer would have fired.
+    await new Promise<void>((resolve) =>
+      host.emit("host:startRound", { puzzle: { ...PUZZLE, id: "round-b", timeCapSeconds: 5 } }, () => resolve())
+    );
+
+    // Wait past round A's original 0.2s time cap; its stale timer must not touch round B.
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    expect(roomManager.getRoom(code)?.currentRound?.puzzle.id).toBe("round-b");
+  }, 2000);
 
   it("automatically ends the round when the time cap elapses", async () => {
     const { httpServer, io } = createServer();

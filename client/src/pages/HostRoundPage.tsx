@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GameMode, PublicBoardView, RoundResult, RoundStartedPayload, TeamInfo } from "@wordchain/shared";
+import type { GameMode, PlayerInfo, PublicBoardView, RoundResult, RoundStartedPayload, TeamInfo } from "@wordchain/shared";
 import { ChainRow, type ChainCellData } from "../components/ChainRow.js";
 import { getSocket } from "../socket.js";
 
@@ -7,11 +7,14 @@ export interface HostRoundPageProps {
   roundData: RoundStartedPayload;
   mode: GameMode;
   teams: TeamInfo[];
+  players: PlayerInfo[];
   onResults: (payload: { results: RoundResult[]; totals: Record<string, number> }) => void;
 }
 
-export function HostRoundPage({ roundData, mode, teams, onResults }: HostRoundPageProps) {
-  const [nicknames, setNicknames] = useState<Record<string, string>>({});
+export function HostRoundPage({ roundData, mode, teams, players, onResults }: HostRoundPageProps) {
+  const [nicknames, setNicknames] = useState<Record<string, string>>(() =>
+    Object.fromEntries(players.map((p) => [p.socketId, p.nickname]))
+  );
   const [boards, setBoards] = useState<Record<string, PublicBoardView>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -58,6 +61,17 @@ export function HostRoundPage({ roundData, mode, teams, onResults }: HostRoundPa
     getSocket().emit("host:endRound", {}, () => {});
   }
 
+  function defaultBoardView(): PublicBoardView {
+    const revealedText: Record<number, string> = {};
+    roundData.rows.forEach((row) => {
+      if (row.isClue) revealedText[row.index] = row.text!;
+    });
+    return { topSolved: 0, bottomSolved: roundData.rows.length - 1, revealedText, penaltySeconds: 0 };
+  }
+
+  const knownEntrantIds = mode === "team" ? teams.map((t) => t.id) : Object.keys(nicknames);
+  const entrantIds = [...new Set([...knownEntrantIds, ...Object.keys(boards)])];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between text-white font-display font-bold">
@@ -73,25 +87,31 @@ export function HostRoundPage({ roundData, mode, teams, onResults }: HostRoundPa
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {Object.entries(boards).map(([entrantId, view]) => (
-          <div key={entrantId} className="bg-white/90 rounded-xl p-3">
-            <p className="font-display font-bold text-chain-locked text-sm mb-2">{displayName(entrantId)}</p>
-            <div className="flex flex-col gap-1">
-              {roundData.rows.map((row) => {
-                const revealed = view.revealedText[row.index];
-                const cells: ChainCellData[] = Array.from({ length: row.length }, (_, i) => ({
-                  letter: revealed?.[i],
-                  state: row.isClue
-                    ? "locked"
-                    : revealed && i < revealed.length
-                      ? "solved"
-                      : "empty",
-                }));
-                return <ChainRow key={row.index} cells={cells} showHintButton={false} />;
-              })}
+        {entrantIds.map((entrantId) => {
+          const view = boards[entrantId] ?? defaultBoardView();
+          return (
+            <div key={entrantId} className="bg-white/90 rounded-xl p-3">
+              <p className="font-display font-bold text-chain-locked text-sm mb-2">{displayName(entrantId)}</p>
+              <div className="flex flex-col gap-1">
+                {roundData.rows.map((row) => {
+                  const revealed = view.revealedText[row.index];
+                  const solvedFully = row.index <= view.topSolved || row.index >= view.bottomSolved;
+                  const cells: ChainCellData[] = Array.from({ length: row.length }, (_, i) => ({
+                    letter: revealed?.[i],
+                    state: row.isClue
+                      ? "locked"
+                      : revealed && i < revealed.length
+                        ? solvedFully
+                          ? "solved"
+                          : "hinted"
+                        : "empty",
+                  }));
+                  return <ChainRow key={row.index} cells={cells} showHintButton={false} />;
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

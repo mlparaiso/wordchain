@@ -24,12 +24,13 @@ export function CustomPuzzleCreatorPage({ onSaved, onCancel }: CustomPuzzleCreat
       return;
     }
 
+    const totalBlanks = Math.max(words.length - 2, 1);
     saveCustomPuzzle({
       id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       category: category.trim() || "Custom",
       difficulty: "medium",
       words,
-      timeCapSeconds: 90,
+      timeCapSeconds: totalBlanks * 15 + 30,
     });
     onSaved();
   }

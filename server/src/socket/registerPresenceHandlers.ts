@@ -11,7 +11,15 @@ export function registerPresenceHandlers(
     const roomCode = socket.data.roomCode as string | undefined;
     if (!roomCode) return;
     const room = roomManager.getRoom(roomCode);
-    if (!room || room.hostSocketId === socket.id) return;
+    if (!room) return;
+
+    if (room.hostSocketId === socket.id) {
+      // The host has no reconnection path today, so a room they've left behind would
+      // otherwise never be cleaned up. Tear it down and let remaining players know.
+      io.to(room.code).emit("room:hostLeft", {});
+      roomManager.removeRoom(room.code);
+      return;
+    }
 
     room.setConnected(socket.id, false);
     const player = room.getPlayers().find((p) => p.socketId === socket.id);

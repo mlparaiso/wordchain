@@ -7,6 +7,7 @@ import type { RoomManager } from "../rooms/RoomManager.js";
 export interface JoinRoomPayload {
   code: string;
   nickname: string;
+  sessionToken?: string;
 }
 
 export interface JoinRoomResponse {
@@ -58,7 +59,7 @@ export function registerPlayerHandlers(io: Server, socket: Socket, roomManager: 
         return;
       }
 
-      const reconnected = room.reconnectPlayer(payload.nickname, socket.id);
+      const reconnected = room.reconnectPlayer(payload.nickname, socket.id, payload.sessionToken);
       if (reconnected) {
         socket.join(room.code);
         socket.data.roomCode = room.code;
@@ -72,7 +73,7 @@ export function registerPlayerHandlers(io: Server, socket: Socket, roomManager: 
         return;
       }
 
-      const player = room.addPlayer(socket.id, payload.nickname);
+      const player = room.addPlayer(socket.id, payload.nickname, payload.sessionToken);
       socket.join(room.code);
       socket.data.roomCode = room.code;
       socket.to(room.code).emit("room:playerJoined", player);

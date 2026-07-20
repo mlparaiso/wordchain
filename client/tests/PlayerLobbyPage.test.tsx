@@ -54,4 +54,40 @@ describe("PlayerLobbyPage", () => {
     });
     expect(onRoundStarted).toHaveBeenCalledWith(payload);
   });
+
+  it("ignores round:started in team mode until the player has picked a team, instead of following them into a broken board", () => {
+    const onRoundStarted = vi.fn();
+    render(
+      <PlayerLobbyPage
+        mode="team"
+        teams={[{ id: "t1", name: "Red Team" }]}
+        onTeamSelected={vi.fn()}
+        onRoundStarted={onRoundStarted}
+      />
+    );
+    const payload = { puzzleId: "p1", rows: [], timeCapSeconds: 60, category: "Test", startedAt: 0, isLastRound: false };
+    act(() => {
+      fakeSocket.trigger("round:started", payload);
+    });
+    expect(onRoundStarted).not.toHaveBeenCalled();
+    expect(screen.getByText(/pick a team/i)).toBeInTheDocument();
+  });
+
+  it("honors round:started once a team-mode player has picked a team", async () => {
+    const onRoundStarted = vi.fn();
+    render(
+      <PlayerLobbyPage
+        mode="team"
+        teams={[{ id: "t1", name: "Red Team" }]}
+        onTeamSelected={vi.fn()}
+        onRoundStarted={onRoundStarted}
+      />
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Red Team" }));
+    const payload = { puzzleId: "p1", rows: [], timeCapSeconds: 60, category: "Test", startedAt: 0, isLastRound: false };
+    act(() => {
+      fakeSocket.trigger("round:started", payload);
+    });
+    expect(onRoundStarted).toHaveBeenCalledWith(payload);
+  });
 });

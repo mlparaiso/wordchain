@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { getActiveRowsFromBounds, type PublicBoardView, type PublicChainRow } from "@wordchain/shared";
 import { ChainLink, type ChainLinkState } from "./ChainLink.js";
 import { ChainRow, type ChainCellData } from "./ChainRow.js";
@@ -23,6 +23,29 @@ export function ChainBoard({
   const [typedByRow, setTypedByRow] = useState<Record<number, string>>({});
   const activeRows = getActiveRowsFromBounds(boardView.topSolved, boardView.bottomSolved);
   const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  // A hint reveals a letter server-side (boardView.revealedText), but the
+  // player still has to submit the *full* word to solve the row. Without
+  // this, the hinted letter shows on screen but isn't actually part of what
+  // gets typed/submitted, so continuing to type only the remaining letters
+  // produces a guess that's silently misaligned with the real word.
+  useEffect(() => {
+    setTypedByRow((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const row of rows) {
+        if (row.isClue) continue;
+        const revealed = boardView.revealedText[row.index];
+        if (!revealed) continue;
+        const current = next[row.index] ?? "";
+        if (!current.startsWith(revealed)) {
+          next[row.index] = revealed;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [boardView, rows]);
 
   function isRowSolved(rowIndex: number): boolean {
     return rowIndex <= boardView.topSolved || rowIndex >= boardView.bottomSolved;
@@ -54,6 +77,7 @@ export function ChainBoard({
         const solvedFully = isRowSolved(row.index);
         const revealed = boardView.revealedText[row.index];
         const typed = typedByRow[row.index] ?? "";
+        const canHint = isActive && (!revealed || revealed.length < row.length);
 
         const cells: ChainCellData[] = Array.from({ length: row.length }, (_, i) => {
           if (row.isClue) return { letter: row.text?.[i], state: "locked" as const };
@@ -67,10 +91,18 @@ export function ChainBoard({
         return (
           <Fragment key={row.index}>
             <div
-              className={`flex items-center gap-2${isActive ? " cursor-text" : ""}`}
-              onClick={isActive ? () => inputRefs.current[row.index]?.focus() : undefined}
+              className={`flex items-center gap-2 min-h-11${isActive ? " cursor-text" : ""}`}
+              onClick={
+                isActive
+                  ? () => {
+                      const input = inputRefs.current[row.index];
+                      input?.focus();
+                      input?.setSelectionRange(input.value.length, input.value.length);
+                    }
+                  : undefined
+              }
             >
-              <ChainRow cells={cells} showHintButton={isActive} onHintClick={() => onHint(row.index)} />
+              <ChainRow cells={cells} showHintButton={canHint} onHintClick={() => onHint(row.index)} />
               {isActive && (
                 <input
                   ref={(el) => {

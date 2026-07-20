@@ -93,7 +93,9 @@ export function SoloRoundPage({ puzzle, onFinished, onQuit }: SoloRoundPageProps
         </button>
       </div>
 
-      <ChainBoard rows={rows} boardView={boardView} onSubmitGuess={handleSubmitGuess} onHint={handleHint} />
+      <div className="w-full max-w-md flex justify-start">
+        <ChainBoard rows={rows} boardView={boardView} onSubmitGuess={handleSubmitGuess} onHint={handleHint} />
+      </div>
 
       <button type="button" onClick={onQuit} className="text-white/70 text-sm font-semibold underline mt-4">
         Give up

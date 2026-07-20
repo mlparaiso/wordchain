@@ -45,4 +45,34 @@ describe("presence on disconnect", () => {
     expect((await updatedPromise).connected).toBe(false);
     await leftPromise;
   }, 2000);
+
+  it("tears down the room and notifies remaining players when the host disconnects", async () => {
+    const { httpServer, io, roomManager } = createServer();
+    await new Promise<void>((resolve) => httpServer.listen(0, resolve));
+    const address = httpServer.address();
+    if (typeof address !== "object" || address === null) throw new Error("no port");
+    const url = `http://localhost:${address.port}`;
+
+    const host: Socket = ioClient(url);
+    await new Promise<void>((resolve) => host.on("connect", resolve));
+    const { code } = await new Promise<{ code: string }>((resolve) => {
+      host.emit("host:createRoom", { mode: "individual" }, resolve);
+    });
+
+    const player: Socket = ioClient(url);
+    await new Promise<void>((resolve) => player.on("connect", resolve));
+    await new Promise<void>((resolve) => player.emit("player:joinRoom", { code, nickname: "Alex" }, () => resolve()));
+
+    cleanup = () => {
+      player.close();
+      io.close();
+      httpServer.close();
+    };
+
+    const hostLeftPromise = new Promise<void>((resolve) => player.once("room:hostLeft", () => resolve()));
+    host.close();
+
+    await hostLeftPromise;
+    expect(roomManager.getRoom(code)).toBeUndefined();
+  }, 2000);
 });

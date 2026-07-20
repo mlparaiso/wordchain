@@ -11,6 +11,7 @@ vi.mock("../src/socket.js", () => ({
       callback: (response: { success: boolean; mode?: string; teams?: unknown[] }) => void
     ) => callback({ success: true, mode: "individual", teams: [] }),
   }),
+  getSessionToken: () => "test-session-token",
 }));
 
 describe("JoinPage", () => {
@@ -33,12 +34,35 @@ describe("JoinPage", () => {
     await userEvent.type(screen.getByLabelText(/nickname/i), "Alex");
     await userEvent.click(screen.getByRole("button", { name: /join/i }));
     expect(onJoined).toHaveBeenCalledWith({
+      code: "BLUE-42",
       nickname: "Alex",
       mode: "individual",
       teams: [],
       activeRound: undefined,
       boardView: undefined,
     });
+  });
+
+  it("includes a session token when joining so the server can tell a reconnect apart from a nickname collision", async () => {
+    const emit = vi.fn(
+      (_event: string, _payload: unknown, callback: (r: { success: boolean; mode: string; teams: unknown[] }) => void) =>
+        callback({ success: true, mode: "individual", teams: [] })
+    );
+    vi.resetModules();
+    vi.doMock("../src/socket.js", () => ({
+      getSocket: () => ({ emit }),
+      getSessionToken: () => "test-session-token",
+    }));
+    const { JoinPage: TokenJoinPage } = await import("../src/pages/JoinPage.js");
+    render(<TokenJoinPage onJoined={vi.fn()} />);
+    await userEvent.type(screen.getByLabelText(/room code/i), "BLUE-42");
+    await userEvent.type(screen.getByLabelText(/nickname/i), "Alex");
+    await userEvent.click(screen.getByRole("button", { name: /join/i }));
+    expect(emit).toHaveBeenCalledWith(
+      "player:joinRoom",
+      { code: "BLUE-42", nickname: "Alex", sessionToken: "test-session-token" },
+      expect.any(Function)
+    );
   });
 
   it("forwards an active round and board view when reconnecting mid-round", async () => {
@@ -54,6 +78,7 @@ describe("JoinPage", () => {
             boardView: { topSolved: 0, bottomSolved: 2, revealedText: {}, penaltySeconds: 0 },
           }),
       }),
+      getSessionToken: () => "test-session-token",
     }));
     const { JoinPage: ReconnectingJoinPage } = await import("../src/pages/JoinPage.js");
     const onJoined = vi.fn();
@@ -72,6 +97,7 @@ describe("JoinPage", () => {
         emit: (_event: string, _payload: unknown, callback: (response: { success: boolean; error?: string }) => void) =>
           callback({ success: false, error: "Room not found" }),
       }),
+      getSessionToken: () => "test-session-token",
     }));
     const { JoinPage: JoinPageWithFailingSocket } = await import("../src/pages/JoinPage.js");
     render(<JoinPageWithFailingSocket onJoined={vi.fn()} />);

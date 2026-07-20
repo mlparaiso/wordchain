@@ -106,12 +106,14 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
         </button>
       </div>
 
-      {finished ? (
-        <div className="flex flex-col items-center gap-2 mt-8">
-          <p className="text-white font-display text-3xl font-extrabold uppercase tracking-wide">🔥 Solved!</p>
-          <p className="text-white/80 font-body">Waiting for others...</p>
+      {finished && (
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-white font-display text-2xl font-extrabold uppercase tracking-wide">🔥 Solved!</p>
+          <p className="text-white/80 font-body text-sm">Waiting for others...</p>
         </div>
-      ) : (
+      )}
+
+      <div className="w-full max-w-md flex justify-start">
         <ChainBoard
           rows={roundData.rows}
           boardView={boardView}
@@ -120,7 +122,7 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
           onTyping={handleTyping}
           typingIndicator={typingIndicator}
         />
-      )}
+      </div>
     </div>
   );
 }
