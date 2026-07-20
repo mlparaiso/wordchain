@@ -56,7 +56,7 @@ export function HostLobbyPage({ roomCode, playlist, onStarted }: HostLobbyPagePr
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-8 flex flex-col items-center gap-6">
       <h1 className="font-display text-2xl text-white font-extrabold">Room code</h1>
       <div className="bg-white rounded-2xl p-6 flex flex-col items-center gap-3">
-        <p className="font-display text-4xl font-black text-chain-locked tracking-widest">{roomCode}</p>
+        <p className="font-mono text-4xl font-bold text-chain-locked tracking-widest">{roomCode}</p>
         <QRCodeSVG value={joinUrl} size={140} aria-label="Room QR code" />
       </div>
 

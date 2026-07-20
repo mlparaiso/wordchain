@@ -61,7 +61,7 @@ export function JoinPage({ onJoined }: JoinPageProps) {
         <label className="flex flex-col gap-1 text-sm font-semibold text-chain-locked">
           Room code
           <input
-            className="border-2 border-chain-purple/30 rounded-lg px-3 py-2 uppercase"
+            className="border-2 border-chain-purple/30 rounded-lg px-3 py-2 uppercase font-mono tracking-widest"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="BLUE-42"

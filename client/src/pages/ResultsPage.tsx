@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import confetti from "canvas-confetti";
 import type { RoundResult, RoundStartedPayload } from "@wordchain/shared";
 import { getSocket } from "../socket.js";
+import { useCountUp } from "../useCountUp.js";
 
 export interface ResultsPageProps {
   results: RoundResult[];
@@ -10,6 +11,18 @@ export interface ResultsPageProps {
   isLastRound: boolean;
   onAdvance?: () => void;
   onNextRoundStarted?: (payload: RoundStartedPayload) => void;
+}
+
+function LeaderboardRow({ rank, displayName, total }: { rank: number; displayName: string; total: number }) {
+  const animatedTotal = useCountUp(total);
+  return (
+    <div className="flex items-center justify-between">
+      <span className="font-display font-bold text-chain-locked">
+        {rank}. {displayName}
+      </span>
+      <span className="font-mono font-bold text-chain-purple tabular-nums">{animatedTotal} pts</span>
+    </div>
+  );
 }
 
 export function ResultsPage({ results, totals, role, isLastRound, onAdvance, onNextRoundStarted }: ResultsPageProps) {
@@ -44,12 +57,7 @@ export function ResultsPage({ results, totals, role, isLastRound, onAdvance, onN
 
       <div className="bg-white rounded-2xl p-6 w-full max-w-md flex flex-col gap-2">
         {leaderboard.map((entry, index) => (
-          <div key={entry.entrantId} className="flex items-center justify-between">
-            <span className="font-display font-bold text-chain-locked">
-              {index + 1}. {entry.displayName}
-            </span>
-            <span className="font-display font-extrabold text-chain-purple">{entry.total} pts</span>
-          </div>
+          <LeaderboardRow key={entry.entrantId} rank={index + 1} displayName={entry.displayName} total={entry.total} />
         ))}
       </div>
 

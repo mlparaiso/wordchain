@@ -72,6 +72,32 @@ describe("ChainBoard", () => {
     expect(dogCells.every((c) => c.getAttribute("data-state") === "solved")).toBe(true);
   });
 
+  it("renders one chain link between each pair of rows, colored by their combined state", () => {
+    render(<ChainBoard rows={ROWS} boardView={INITIAL_VIEW} onSubmitGuess={vi.fn()} onHint={vi.fn()} />);
+    const links = screen.getAllByTestId("chain-link");
+    expect(links).toHaveLength(5);
+    expect(links.map((l) => l.getAttribute("data-state"))).toEqual([
+      "active",
+      "active",
+      "inert",
+      "active",
+      "active",
+    ]);
+  });
+
+  it("marks a link solved only once both of its neighboring rows are fully solved", () => {
+    const view: PublicBoardView = {
+      topSolved: 1,
+      bottomSolved: 5,
+      revealedText: { 0: "HOT", 1: "DOG" },
+      penaltySeconds: 0,
+    };
+    render(<ChainBoard rows={ROWS} boardView={view} onSubmitGuess={vi.fn()} onHint={vi.fn()} />);
+    const links = screen.getAllByTestId("chain-link");
+    expect(links[0]).toHaveAttribute("data-state", "solved");
+    expect(links[1]).toHaveAttribute("data-state", "active");
+  });
+
   it("calls onTyping with the row index and current value as the user types", async () => {
     const onTyping = vi.fn();
     render(

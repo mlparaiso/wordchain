@@ -14,6 +14,7 @@ export default {
       fontFamily: {
         display: ["Baloo 2", "system-ui", "sans-serif"],
         body: ["Inter", "system-ui", "sans-serif"],
+        mono: ["Space Mono", "ui-monospace", "monospace"],
       },
     },
   },

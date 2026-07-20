@@ -91,8 +91,8 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
   return (
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-6 flex flex-col items-center gap-4">
       <div className="flex items-center justify-between w-full max-w-md text-white font-display font-bold">
-        <span>{roundData.category}</span>
-        <span>{elapsedSeconds}s</span>
+        <span className="uppercase tracking-widest text-sm opacity-90">{roundData.category}</span>
+        <span className="font-mono tabular-nums">{elapsedSeconds}s</span>
         <button
           type="button"
           onClick={() => {
@@ -107,7 +107,10 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
       </div>
 
       {finished ? (
-        <p className="text-white font-display text-2xl font-extrabold mt-8">🔥 Solved! Waiting for others...</p>
+        <div className="flex flex-col items-center gap-2 mt-8">
+          <p className="text-white font-display text-3xl font-extrabold uppercase tracking-wide">🔥 Solved!</p>
+          <p className="text-white/80 font-body">Waiting for others...</p>
+        </div>
       ) : (
         <ChainBoard
           rows={roundData.rows}

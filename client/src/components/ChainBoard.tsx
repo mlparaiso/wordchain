@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { getActiveRowsFromBounds, type PublicBoardView, type PublicChainRow } from "@wordchain/shared";
+import { ChainLink, type ChainLinkState } from "./ChainLink.js";
 import { ChainRow, type ChainCellData } from "./ChainRow.js";
 
 export interface ChainBoardProps {
@@ -23,6 +24,16 @@ export function ChainBoard({
   const activeRows = getActiveRowsFromBounds(boardView.topSolved, boardView.bottomSolved);
   const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
+  function isRowSolved(rowIndex: number): boolean {
+    return rowIndex <= boardView.topSolved || rowIndex >= boardView.bottomSolved;
+  }
+
+  function linkStateBetween(rowAIndex: number, rowBIndex: number): ChainLinkState {
+    if (isRowSolved(rowAIndex) && isRowSolved(rowBIndex)) return "solved";
+    if (activeRows.includes(rowAIndex) || activeRows.includes(rowBIndex)) return "active";
+    return "inert";
+  }
+
   function handleChange(rowIndex: number, value: string, length: number) {
     const normalized = value.toUpperCase().slice(0, length);
     setTypedByRow((prev) => ({ ...prev, [rowIndex]: normalized }));
@@ -37,10 +48,10 @@ export function ChainBoard({
   }
 
   return (
-    <div className="flex flex-col gap-2 items-start">
-      {rows.map((row) => {
+    <div className="flex flex-col items-start">
+      {rows.map((row, rowPosition) => {
         const isActive = activeRows.includes(row.index);
-        const solvedFully = row.index <= boardView.topSolved || row.index >= boardView.bottomSolved;
+        const solvedFully = isRowSolved(row.index);
         const revealed = boardView.revealedText[row.index];
         const typed = typedByRow[row.index] ?? "";
 
@@ -54,31 +65,35 @@ export function ChainBoard({
         });
 
         return (
-          <div
-            key={row.index}
-            className={`flex items-center gap-2${isActive ? " cursor-text" : ""}`}
-            onClick={isActive ? () => inputRefs.current[row.index]?.focus() : undefined}
-          >
-            <ChainRow cells={cells} showHintButton={isActive} onHintClick={() => onHint(row.index)} />
-            {isActive && (
-              <input
-                ref={(el) => {
-                  inputRefs.current[row.index] = el;
-                }}
-                aria-label={`Guess for row ${row.index}`}
-                className="sr-only"
-                value={typed}
-                maxLength={row.length}
-                onChange={(e) => handleChange(row.index, e.target.value, row.length)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSubmit(row.index);
-                }}
-              />
+          <Fragment key={row.index}>
+            <div
+              className={`flex items-center gap-2${isActive ? " cursor-text" : ""}`}
+              onClick={isActive ? () => inputRefs.current[row.index]?.focus() : undefined}
+            >
+              <ChainRow cells={cells} showHintButton={isActive} onHintClick={() => onHint(row.index)} />
+              {isActive && (
+                <input
+                  ref={(el) => {
+                    inputRefs.current[row.index] = el;
+                  }}
+                  aria-label={`Guess for row ${row.index}`}
+                  className="sr-only"
+                  value={typed}
+                  maxLength={row.length}
+                  onChange={(e) => handleChange(row.index, e.target.value, row.length)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSubmit(row.index);
+                  }}
+                />
+              )}
+              {typingIndicator?.rowIndex === row.index && (
+                <span className="text-white/90 text-xs italic">✏️ {typingIndicator.nickname} is typing…</span>
+              )}
+            </div>
+            {rowPosition < rows.length - 1 && (
+              <ChainLink state={linkStateBetween(row.index, rows[rowPosition + 1].index)} />
             )}
-            {typingIndicator?.rowIndex === row.index && (
-              <span className="text-white/90 text-xs italic">✏️ {typingIndicator.nickname} is typing…</span>
-            )}
-          </div>
+          </Fragment>
         );
       })}
     </div>

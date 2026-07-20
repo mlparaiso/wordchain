@@ -61,8 +61,8 @@ export function HostRoundPage({ roundData, mode, teams, onResults }: HostRoundPa
   return (
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between text-white font-display font-bold">
-        <span>{roundData.category}</span>
-        <span>{elapsedSeconds}s</span>
+        <span className="uppercase tracking-widest text-sm opacity-90">{roundData.category}</span>
+        <span className="font-mono tabular-nums">{elapsedSeconds}s</span>
         <button
           type="button"
           onClick={handleEndRound}

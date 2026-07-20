@@ -40,7 +40,10 @@ export default function App() {
   if (screen.name === "landing") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6">
-        <h1 className="font-display text-4xl text-white font-extrabold">Word Chain</h1>
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="font-display text-4xl text-white font-extrabold">Word Chain</h1>
+          <p className="text-white/80 font-body">Link every compound word before time runs out.</p>
+        </div>
         <div className="flex gap-4">
           <button
             type="button"
