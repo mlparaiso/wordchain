@@ -47,6 +47,48 @@ export const PUZZLE_LIBRARY: Puzzle[] = [
     words: ["THUNDER", "STORM", "CLOUD", "COVER", "LETTER", "GRADE", "POINT"],
     timeCapSeconds: 105,
   },
+  {
+    id: "grocery-shift",
+    category: "Everyday",
+    difficulty: "easy",
+    words: ["GROCERY", "STORE", "CREDIT", "CARD", "GAME", "NIGHT", "SHIFT"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "school-reef",
+    category: "School",
+    difficulty: "easy",
+    words: ["SCHOOL", "BUS", "STOP", "SIGN", "LANGUAGE", "BARRIER", "REEF"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "birthday-party",
+    category: "Food",
+    difficulty: "easy",
+    words: ["BIRTHDAY", "CAKE", "POP", "MUSIC", "BOX", "OFFICE", "PARTY"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "football-traffic",
+    category: "Sports",
+    difficulty: "easy",
+    words: ["FOOTBALL", "FIELD", "GOAL", "LINE", "DRIVE", "THROUGH", "TRAFFIC"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "swimming-study",
+    category: "Everyday",
+    difficulty: "easy",
+    words: ["SWIMMING", "POOL", "TABLE", "TENNIS", "COURT", "CASE", "STUDY"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "drawing-pad",
+    category: "School",
+    difficulty: "easy",
+    words: ["DRAWING", "PAPER", "CLIP", "BOARD", "ROOM", "NUMBER", "PAD"],
+    timeCapSeconds: 105,
+  },
 
   // --- Medium: 9 words, 7 blanks (135s) ---
   {
@@ -77,6 +119,27 @@ export const PUZZLE_LIBRARY: Puzzle[] = [
     words: ["MINI", "GOLF", "BAG", "CHECK", "POINT", "BREAK", "FAST", "FOOD", "COURT"],
     timeCapSeconds: 135,
   },
+  {
+    id: "peanut-plan",
+    category: "Food",
+    difficulty: "medium",
+    words: ["PEANUT", "BUTTER", "KNIFE", "BLOCK", "PARTY", "LINE", "DANCE", "FLOOR", "PLAN"],
+    timeCapSeconds: 135,
+  },
+  {
+    id: "home-mechanism",
+    category: "Everyday",
+    difficulty: "medium",
+    words: ["HOME", "OFFICE", "SUPPLY", "CHAIN", "REACTION", "TIME", "ZONE", "DEFENSE", "MECHANISM"],
+    timeCapSeconds: 135,
+  },
+  {
+    id: "national-model",
+    category: "Everyday",
+    difficulty: "medium",
+    words: ["NATIONAL", "PARK", "BENCH", "PRESS", "CONFERENCE", "ROOM", "TEMPERATURE", "SCALE", "MODEL"],
+    timeCapSeconds: 135,
+  },
 
   // --- Hard: 11 words, 9 blanks (165s) ---
   {
@@ -98,6 +161,27 @@ export const PUZZLE_LIBRARY: Puzzle[] = [
     category: "School",
     difficulty: "hard",
     words: ["COMPUTER", "SCIENCE", "FAIR", "TRADE", "SCHOOL", "ZONE", "DEFENSE", "ATTORNEY", "GENERAL", "STORE", "CREDIT"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "icecream-game",
+    category: "Food",
+    difficulty: "hard",
+    words: ["ICE", "CREAM", "CHEESE", "PLATE", "GLASS", "CEILING", "FAN", "CLUB", "SANDWICH", "BOARD", "GAME"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "after-piece",
+    category: "School",
+    difficulty: "hard",
+    words: ["AFTER", "SCHOOL", "SUPPLY", "CLOSET", "SPACE", "BAR", "CODE", "BREAKER", "BOX", "SET", "PIECE"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "kitchen-field",
+    category: "Sports",
+    difficulty: "hard",
+    words: ["KITCHEN", "SINK", "HOLE", "PUNCH", "LINE", "DRIVE", "WAY", "SIDE", "WALK", "OUT", "FIELD"],
     timeCapSeconds: 165,
   },
 ];
