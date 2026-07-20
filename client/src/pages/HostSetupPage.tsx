@@ -3,6 +3,13 @@ import { PUZZLE_LIBRARY, type GameMode, type Puzzle, type TeamInfo } from "@word
 import { getSocket } from "../socket.js";
 import { loadCustomPuzzles } from "../customPuzzles.js";
 
+const DIFFICULTY_ORDER: Puzzle["difficulty"][] = ["easy", "medium", "hard"];
+const DIFFICULTY_LABELS: Record<Puzzle["difficulty"], string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
+};
+
 export interface HostSetupPageProps {
   onOpenCreator: () => void;
   onRoomCreated: (data: { code: string; mode: GameMode; playlist: Puzzle[] }) => void;
@@ -20,6 +27,18 @@ export function HostSetupPage({ onOpenCreator, onRoomCreated }: HostSetupPagePro
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllInDifficulty(puzzlesInTier: Puzzle[]) {
+    const allSelected = puzzlesInTier.every((p) => selectedIds.has(p.id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const puzzle of puzzlesInTier) {
+        if (allSelected) next.delete(puzzle.id);
+        else next.add(puzzle.id);
+      }
       return next;
     });
   }
@@ -82,18 +101,42 @@ export function HostSetupPage({ onOpenCreator, onRoomCreated }: HostSetupPagePro
           + Create a custom puzzle
         </button>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <span className="text-sm font-semibold text-chain-locked">Puzzles for this game</span>
-          {allPuzzles.map((puzzle) => (
-            <label key={puzzle.id} className="flex items-center gap-2 text-chain-locked">
-              <input
-                type="checkbox"
-                checked={selectedIds.has(puzzle.id)}
-                onChange={() => toggleSelected(puzzle.id)}
-              />
-              {puzzle.category} — {puzzle.words[0]}...{puzzle.words[puzzle.words.length - 1]} ({puzzle.difficulty})
-            </label>
-          ))}
+          <div className="flex flex-col gap-4 max-h-72 overflow-y-auto pr-1">
+            {DIFFICULTY_ORDER.map((difficulty) => {
+              const puzzlesInTier = allPuzzles.filter((p) => p.difficulty === difficulty);
+              if (puzzlesInTier.length === 0) return null;
+              const allSelected = puzzlesInTier.every((p) => selectedIds.has(p.id));
+
+              return (
+                <div key={difficulty} className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-widest text-chain-purple">
+                      {DIFFICULTY_LABELS[difficulty]}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleAllInDifficulty(puzzlesInTier)}
+                      className="text-xs font-semibold text-chain-purple underline"
+                    >
+                      {allSelected ? "Deselect all" : "Select all"}
+                    </button>
+                  </div>
+                  {puzzlesInTier.map((puzzle) => (
+                    <label key={puzzle.id} className="flex items-center gap-2 text-chain-locked">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(puzzle.id)}
+                        onChange={() => toggleSelected(puzzle.id)}
+                      />
+                      {puzzle.category} — {puzzle.words[0]}...{puzzle.words[puzzle.words.length - 1]}
+                    </label>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <button

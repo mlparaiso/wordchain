@@ -23,4 +23,15 @@ describe("PUZZLE_LIBRARY", () => {
       expect(puzzle.timeCapSeconds).toBeGreaterThan(0);
     }
   });
+
+  it("has a meaningful spread of puzzles across all three difficulties", () => {
+    const byDifficulty = {
+      easy: PUZZLE_LIBRARY.filter((p) => p.difficulty === "easy").length,
+      medium: PUZZLE_LIBRARY.filter((p) => p.difficulty === "medium").length,
+      hard: PUZZLE_LIBRARY.filter((p) => p.difficulty === "hard").length,
+    };
+    expect(byDifficulty.easy).toBeGreaterThanOrEqual(5);
+    expect(byDifficulty.medium).toBeGreaterThanOrEqual(5);
+    expect(byDifficulty.hard).toBeGreaterThanOrEqual(5);
+  });
 });

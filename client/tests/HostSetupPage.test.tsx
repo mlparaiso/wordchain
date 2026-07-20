@@ -72,4 +72,20 @@ describe("HostSetupPage", () => {
     await userEvent.click(screen.getByText(/create a custom puzzle/i));
     expect(onOpenCreator).toHaveBeenCalled();
   });
+
+  it("groups puzzles under Easy/Medium/Hard headers and selects an entire tier at once", async () => {
+    const onRoomCreated = vi.fn();
+    render(<HostSetupPage onOpenCreator={vi.fn()} onRoomCreated={onRoomCreated} />);
+
+    expect(screen.getByText("Easy")).toBeInTheDocument();
+    expect(screen.getByText("Medium")).toBeInTheDocument();
+    expect(screen.getByText("Hard")).toBeInTheDocument();
+
+    const easyPuzzleCount = PUZZLE_LIBRARY.filter((p) => p.difficulty === "easy").length;
+    const selectAllButtons = screen.getAllByRole("button", { name: /select all/i });
+    await userEvent.click(selectAllButtons[0]); // Easy section is rendered first
+
+    await userEvent.click(screen.getByRole("button", { name: /create room/i }));
+    expect(onRoomCreated.mock.calls[0][0].playlist).toHaveLength(easyPuzzleCount);
+  });
 });
