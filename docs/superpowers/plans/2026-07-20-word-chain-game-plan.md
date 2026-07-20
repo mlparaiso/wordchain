@@ -3929,7 +3929,7 @@ import { getActiveRowsFromBounds } from "../src/chainSolver.js";
 describe("getActiveRowsFromBounds", () => {
   it("matches getActiveRows given the same bounds, without needing the solution words", () => {
     expect(getActiveRowsFromBounds(0, 5)).toEqual([1, 4]);
-    expect(getActiveRowsFromBounds(2, 3)).toEqual([3]);
+    expect(getActiveRowsFromBounds(2, 4)).toEqual([3]);
     expect(getActiveRowsFromBounds(2, 2)).toEqual([]);
   });
 });
