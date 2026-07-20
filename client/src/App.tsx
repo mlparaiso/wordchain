@@ -10,6 +10,9 @@ import { PlayerLobbyPage } from "./pages/PlayerLobbyPage.js";
 import { PlayerRoundPage } from "./pages/PlayerRoundPage.js";
 import { HostRoundPage } from "./pages/HostRoundPage.js";
 import { ResultsPage } from "./pages/ResultsPage.js";
+import { SoloDifficultyPage } from "./pages/SoloDifficultyPage.js";
+import { SoloRoundPage, type SoloRunSummary } from "./pages/SoloRoundPage.js";
+import { SoloResultsPage } from "./pages/SoloResultsPage.js";
 
 export type Role = "host" | "player";
 
@@ -21,7 +24,10 @@ export type Screen =
   | { name: "hostLobby" }
   | { name: "playerLobby" }
   | { name: "round"; role: Role }
-  | { name: "results"; role: Role };
+  | { name: "results"; role: Role }
+  | { name: "soloDifficulty" }
+  | { name: "soloRound" }
+  | { name: "soloResults" };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: "landing" });
@@ -36,6 +42,8 @@ export default function App() {
   const [lastResults, setLastResults] = useState<{ results: RoundResult[]; totals: Record<string, number> } | null>(
     null
   );
+  const [soloPuzzle, setSoloPuzzle] = useState<Puzzle | null>(null);
+  const [soloSummary, setSoloSummary] = useState<SoloRunSummary | null>(null);
 
   if (screen.name === "landing") {
     return (
@@ -60,6 +68,13 @@ export default function App() {
             Join a game
           </button>
         </div>
+        <button
+          type="button"
+          onClick={() => setScreen({ name: "soloDifficulty" })}
+          className="text-white/80 text-sm font-semibold underline"
+        >
+          Practice Solo
+        </button>
       </div>
     );
   }
@@ -217,6 +232,41 @@ export default function App() {
           setRoundData(payload);
           setScreen({ name: "round", role: "player" });
         }}
+      />
+    );
+  }
+
+  if (screen.name === "soloDifficulty") {
+    return (
+      <SoloDifficultyPage
+        onPuzzleChosen={(puzzle) => {
+          setSoloPuzzle(puzzle);
+          setScreen({ name: "soloRound" });
+        }}
+        onBack={() => setScreen({ name: "landing" })}
+      />
+    );
+  }
+
+  if (screen.name === "soloRound" && soloPuzzle) {
+    return (
+      <SoloRoundPage
+        puzzle={soloPuzzle}
+        onFinished={(summary) => {
+          setSoloSummary(summary);
+          setScreen({ name: "soloResults" });
+        }}
+        onQuit={() => setScreen({ name: "landing" })}
+      />
+    );
+  }
+
+  if (screen.name === "soloResults" && soloSummary) {
+    return (
+      <SoloResultsPage
+        summary={soloSummary}
+        onPlayAgain={() => setScreen({ name: "soloDifficulty" })}
+        onBackToMenu={() => setScreen({ name: "landing" })}
       />
     );
   }
