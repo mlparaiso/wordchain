@@ -76,6 +76,43 @@ describe("player:submitGuess", () => {
     expect((await updatePromise).view.topSolved).toBe(1);
   });
 
+  it("broadcasts a round:activity event with the player's nickname on a correct guess", async () => {
+    const { player } = await setupActiveRound();
+
+    const activityPromise = new Promise<{ type: string; nickname: string; word?: string }>((resolve) => {
+      player.once("round:activity", resolve);
+    });
+    await new Promise<void>((resolve) => player.emit("player:submitGuess", { rowIndex: 1, guess: "dog" }, () => resolve()));
+
+    expect(await activityPromise).toMatchObject({ type: "correct", nickname: "Alex", rowIndex: 1, word: "DOG" });
+  });
+
+  it("uses the individual player's nickname (not the team name) in team mode", async () => {
+    const { player } = await setupActiveRound("team");
+
+    const activityPromise = new Promise<{ nickname: string; entrantId: string }>((resolve) => {
+      player.once("round:activity", resolve);
+    });
+    await new Promise<void>((resolve) => player.emit("player:submitGuess", { rowIndex: 1, guess: "DOG" }, () => resolve()));
+
+    const event = await activityPromise;
+    expect(event.nickname).toBe("Alex");
+    expect(event.entrantId).toBe("t1");
+  });
+
+  it("does not broadcast round:activity for a wrong guess", async () => {
+    const { player } = await setupActiveRound();
+
+    let sawActivity = false;
+    player.on("round:activity", () => {
+      sawActivity = true;
+    });
+    await new Promise<void>((resolve) => player.emit("player:submitGuess", { rowIndex: 1, guess: "CAT" }, () => resolve()));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(sawActivity).toBe(false);
+  });
+
   it("penalizes a wrong guess without advancing the pointer", async () => {
     const { player } = await setupActiveRound();
 
@@ -137,6 +174,17 @@ describe("player:submitGuess", () => {
       const update = await updatePromise;
       expect(update.view.revealedText[1]).toBe("D");
       expect(update.view.penaltySeconds).toBe(5);
+    });
+
+    it("broadcasts a round:activity event with the player's nickname", async () => {
+      const { player } = await setupActiveRound();
+
+      const activityPromise = new Promise<{ type: string; nickname: string; rowIndex: number }>((resolve) =>
+        player.once("round:activity", resolve)
+      );
+      await new Promise<void>((resolve) => player.emit("player:useHint", { rowIndex: 1 }, () => resolve()));
+
+      expect(await activityPromise).toMatchObject({ type: "hint", nickname: "Alex", rowIndex: 1 });
     });
 
     it("rejects a hint on a row that is not active", async () => {

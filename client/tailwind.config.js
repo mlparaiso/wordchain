@@ -16,6 +16,17 @@ export default {
         body: ["Inter", "system-ui", "sans-serif"],
         mono: ["Space Mono", "ui-monospace", "monospace"],
       },
+      keyframes: {
+        "penalty-float": {
+          "0%": { opacity: "0", transform: "translateY(0)" },
+          "15%": { opacity: "1", transform: "translateY(-4px)" },
+          "80%": { opacity: "1", transform: "translateY(-14px)" },
+          "100%": { opacity: "0", transform: "translateY(-22px)" },
+        },
+      },
+      animation: {
+        "penalty-float": "penalty-float 1.1s ease-out forwards",
+      },
     },
   },
   plugins: [],

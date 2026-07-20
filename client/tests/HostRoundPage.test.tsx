@@ -123,6 +123,21 @@ describe("HostRoundPage", () => {
     expect(hintedCell).toHaveAttribute("data-state", "hinted");
   });
 
+  it("adds an activity entry with the player's name when round:activity fires", () => {
+    render(<HostRoundPage roundData={ROUND_DATA} mode="individual" teams={[]} players={[]} onResults={vi.fn()} />);
+    act(() => {
+      fakeSocket.trigger("round:activity", {
+        type: "correct",
+        entrantId: "p1",
+        nickname: "Alex",
+        rowIndex: 1,
+        word: "DOG",
+      });
+    });
+    expect(screen.getByText(/Alex/)).toBeInTheDocument();
+    expect(screen.getByText(/solved DOG/)).toBeInTheDocument();
+  });
+
   it("calls onResults when round:results fires", () => {
     const onResults = vi.fn();
     render(<HostRoundPage roundData={ROUND_DATA} mode="individual" teams={[]} players={[]} onResults={onResults} />);

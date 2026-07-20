@@ -20,6 +20,14 @@ export interface TeamInfo {
   name: string;
 }
 
+export interface RoundActivityEvent {
+  type: "hint" | "correct";
+  entrantId: string; // socketId (individual mode) or teamId (team mode)
+  nickname: string; // the individual player's name, even in team mode
+  rowIndex: number;
+  word?: string; // present when type === "correct"
+}
+
 export interface RoundResult {
   entrantId: string; // socketId (individual mode) or teamId (team mode)
   displayName: string;

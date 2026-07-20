@@ -45,6 +45,17 @@ export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManage
       room.currentRound!.entrantChains.set(entrantId, result.state);
       io.to(room.code).emit("board:updated", { entrantId, view: toPublicBoardView(result.state) });
 
+      if (result.correct) {
+        const player = room.getPlayers().find((p) => p.socketId === socket.id);
+        io.to(room.code).emit("round:activity", {
+          type: "correct",
+          entrantId,
+          nickname: player?.nickname ?? "Someone",
+          rowIndex: payload.rowIndex,
+          word: payload.guess.trim().toUpperCase(),
+        });
+      }
+
       if (result.correct && isComplete(result.state) && !room.currentRound!.finishedAt.has(entrantId)) {
         room.currentRound!.finishedAt.set(entrantId, Date.now());
         io.to(room.code).emit("player:chainComplete", { entrantId });
@@ -85,6 +96,15 @@ export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManage
 
       room.currentRound!.entrantChains.set(entrantId, nextState);
       io.to(room.code).emit("board:updated", { entrantId, view: toPublicBoardView(nextState) });
+
+      const player = room.getPlayers().find((p) => p.socketId === socket.id);
+      io.to(room.code).emit("round:activity", {
+        type: "hint",
+        entrantId,
+        nickname: player?.nickname ?? "Someone",
+        rowIndex: payload.rowIndex,
+      });
+
       callback({ success: true });
     }
   );

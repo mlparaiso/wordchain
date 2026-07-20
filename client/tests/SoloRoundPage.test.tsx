@@ -62,6 +62,12 @@ describe("SoloRoundPage", () => {
     expect(onFinished.mock.calls[0][0].hintsUsed).toBe(1);
   });
 
+  it("shows the hint penalty in the timer immediately, not only at the end", async () => {
+    render(<SoloRoundPage puzzle={PUZZLE} onFinished={vi.fn()} onQuit={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button", { name: "💡" }));
+    expect(screen.getByText("5s")).toBeInTheDocument();
+  });
+
   it("calls onQuit when Give up is clicked", async () => {
     const onQuit = vi.fn();
     render(<SoloRoundPage puzzle={PUZZLE} onFinished={vi.fn()} onQuit={onQuit} />);

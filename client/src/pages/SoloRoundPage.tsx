@@ -10,6 +10,7 @@ import {
 } from "@wordchain/shared";
 import { ChainBoard } from "../components/ChainBoard.js";
 import { isSoundEnabled, playTone, setSoundEnabled } from "../sound.js";
+import { usePenaltyFlashes } from "../usePenaltyFlashes.js";
 
 export interface SoloRunSummary {
   puzzle: Puzzle;
@@ -37,6 +38,7 @@ export function SoloRoundPage({ puzzle, onFinished, onQuit }: SoloRoundPageProps
   const rows = toPublicRows(puzzle.words);
   const boardView = toPublicBoardView(chainState);
   const totalRows = puzzle.words.length - 2;
+  const penaltyFlashes = usePenaltyFlashes(boardView.penaltySeconds);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -79,7 +81,17 @@ export function SoloRoundPage({ puzzle, onFinished, onQuit }: SoloRoundPageProps
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-6 flex flex-col items-center gap-4">
       <div className="flex items-center justify-between w-full max-w-md text-white font-display font-bold">
         <span className="uppercase tracking-widest text-sm opacity-90">{puzzle.category}</span>
-        <span className="font-mono tabular-nums">{elapsedSeconds}s</span>
+        <span className="relative font-mono tabular-nums">
+          {elapsedSeconds + boardView.penaltySeconds}s
+          {penaltyFlashes.map((flash) => (
+            <span
+              key={flash.id}
+              className="absolute left-1/2 -top-1 -translate-x-1/2 text-red-300 text-xs font-bold animate-penalty-float pointer-events-none"
+            >
+              +{flash.amount}s
+            </span>
+          ))}
+        </span>
         <button
           type="button"
           onClick={() => {

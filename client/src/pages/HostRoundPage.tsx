@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
-import type { GameMode, PlayerInfo, PublicBoardView, RoundResult, RoundStartedPayload, TeamInfo } from "@wordchain/shared";
+import type {
+  GameMode,
+  PlayerInfo,
+  PublicBoardView,
+  RoundActivityEvent,
+  RoundResult,
+  RoundStartedPayload,
+  TeamInfo,
+} from "@wordchain/shared";
 import { ChainRow, type ChainCellData } from "../components/ChainRow.js";
+import { ActivityFeed, type ActivityEntry } from "../components/ActivityFeed.js";
 import { getSocket } from "../socket.js";
+
+const MAX_ACTIVITY_ENTRIES = 30;
+let nextActivityId = 0;
 
 export interface HostRoundPageProps {
   roundData: RoundStartedPayload;
@@ -17,6 +29,7 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
   );
   const [boards, setBoards] = useState<Record<string, PublicBoardView>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [activity, setActivity] = useState<ActivityEntry[]>([]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -30,16 +43,21 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
     function handleResults(payload: { results: RoundResult[]; totals: Record<string, number> }) {
       onResults(payload);
     }
+    function handleActivity(payload: RoundActivityEvent) {
+      setActivity((current) => [{ ...payload, id: nextActivityId++ }, ...current].slice(0, MAX_ACTIVITY_ENTRIES));
+    }
 
     socket.on("room:playerJoined", rememberNickname);
     socket.on("room:playerUpdated", rememberNickname);
     socket.on("board:updated", handleBoardUpdated);
     socket.on("round:results", handleResults);
+    socket.on("round:activity", handleActivity);
     return () => {
       socket.off("room:playerJoined");
       socket.off("room:playerUpdated");
       socket.off("board:updated");
       socket.off("round:results");
+      socket.off("round:activity");
     };
   }, [onResults]);
 
@@ -86,32 +104,35 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        {entrantIds.map((entrantId) => {
-          const view = boards[entrantId] ?? defaultBoardView();
-          return (
-            <div key={entrantId} className="bg-white/90 rounded-xl p-3">
-              <p className="font-display font-bold text-chain-locked text-sm mb-2">{displayName(entrantId)}</p>
-              <div className="flex flex-col gap-1">
-                {roundData.rows.map((row) => {
-                  const revealed = view.revealedText[row.index];
-                  const solvedFully = row.index <= view.topSolved || row.index >= view.bottomSolved;
-                  const cells: ChainCellData[] = Array.from({ length: row.length }, (_, i) => ({
-                    letter: revealed?.[i],
-                    state: row.isClue
-                      ? "locked"
-                      : revealed && i < revealed.length
-                        ? solvedFully
-                          ? "solved"
-                          : "hinted"
-                        : "empty",
-                  }));
-                  return <ChainRow key={row.index} cells={cells} showHintButton={false} />;
-                })}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="grid grid-cols-3 gap-4 flex-1">
+          {entrantIds.map((entrantId) => {
+            const view = boards[entrantId] ?? defaultBoardView();
+            return (
+              <div key={entrantId} className="bg-white/90 rounded-xl p-3">
+                <p className="font-display font-bold text-chain-locked text-sm mb-2">{displayName(entrantId)}</p>
+                <div className="flex flex-col gap-1">
+                  {roundData.rows.map((row) => {
+                    const revealed = view.revealedText[row.index];
+                    const solvedFully = row.index <= view.topSolved || row.index >= view.bottomSolved;
+                    const cells: ChainCellData[] = Array.from({ length: row.length }, (_, i) => ({
+                      letter: revealed?.[i],
+                      state: row.isClue
+                        ? "locked"
+                        : revealed && i < revealed.length
+                          ? solvedFully
+                            ? "solved"
+                            : "hinted"
+                          : "empty",
+                    }));
+                    return <ChainRow key={row.index} cells={cells} showHintButton={false} />;
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        <ActivityFeed entries={activity} />
       </div>
     </div>
   );

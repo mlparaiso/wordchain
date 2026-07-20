@@ -126,6 +126,41 @@ describe("PlayerRoundPage", () => {
     expect(screen.getByText("✏️ Jamie is typing…")).toBeInTheDocument();
   });
 
+  it("shows a live-updating timer that includes the current penalty", () => {
+    render(<PlayerRoundPage roundData={ROUND_DATA} mode="individual" myTeamId={null} onResults={vi.fn()} />);
+    act(() => {
+      fakeSocket.trigger("board:updated", {
+        entrantId: "my-socket-id",
+        view: { topSolved: 0, bottomSolved: 2, revealedText: { 0: "HOT", 2: "KICK" }, penaltySeconds: 5 },
+      });
+    });
+    expect(screen.getByText("5s")).toBeInTheDocument();
+  });
+
+  it("adds an activity entry with the player's name when round:activity fires", () => {
+    render(<PlayerRoundPage roundData={ROUND_DATA} mode="individual" myTeamId={null} onResults={vi.fn()} />);
+    act(() => {
+      fakeSocket.trigger("round:activity", { type: "hint", entrantId: "my-socket-id", nickname: "Alex", rowIndex: 1 });
+    });
+    expect(screen.getByText("Alex")).toBeInTheDocument();
+    expect(screen.getByText(/used a hint/i)).toBeInTheDocument();
+  });
+
+  it("shows an activity entry for a teammate's correct guess by name, not team id", () => {
+    render(<PlayerRoundPage roundData={ROUND_DATA} mode="team" myTeamId="t1" onResults={vi.fn()} />);
+    act(() => {
+      fakeSocket.trigger("round:activity", {
+        type: "correct",
+        entrantId: "t1",
+        nickname: "Jamie",
+        rowIndex: 1,
+        word: "DOG",
+      });
+    });
+    expect(screen.getByText(/Jamie/)).toBeInTheDocument();
+    expect(screen.getByText(/solved DOG/)).toBeInTheDocument();
+  });
+
   it("toggles the sound setting and updates the button label", async () => {
     render(<PlayerRoundPage roundData={ROUND_DATA} mode="individual" myTeamId={null} onResults={vi.fn()} />);
     const toggle = screen.getByRole("button", { name: /🔊|🔇/ });
