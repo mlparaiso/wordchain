@@ -1300,6 +1300,7 @@ Expected: FAIL — `Cannot find module '../src/index.js'` (or no `createServer` 
 // server/src/index.ts
 
 import { createServer as createHttpServer } from "node:http";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import { Server } from "socket.io";
 import { RoomManager } from "./rooms/RoomManager.js";
@@ -1320,7 +1321,9 @@ export function createServer() {
 }
 
 // Only start listening when this file is run directly (not when imported by tests).
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compares filesystem paths (via fileURLToPath) rather than raw string-concatenating
+// a file:// URL, since the latter doesn't match on Windows path formats.
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { httpServer } = createServer();
   const port = process.env.PORT ? Number(process.env.PORT) : 3001;
   httpServer.listen(port, () => {

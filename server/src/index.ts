@@ -1,4 +1,5 @@
 import { createServer as createHttpServer } from "node:http";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import { Server } from "socket.io";
 import { RoomManager } from "./rooms/RoomManager.js";
@@ -35,7 +36,7 @@ export function createServer(options?: { presenceGracePeriodMs?: number }) {
 }
 
 // Only start listening when this file is run directly (not when imported by tests).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { httpServer } = createServer();
   const port = process.env.PORT ? Number(process.env.PORT) : 3001;
   httpServer.listen(port, () => {
