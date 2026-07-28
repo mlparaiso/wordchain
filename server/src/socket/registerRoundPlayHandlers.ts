@@ -9,6 +9,25 @@ function resolveActiveRoom(socket: Socket, roomManager: RoomManager): Room | und
   return room?.currentRound ? room : undefined;
 }
 
+// The board and puzzle answers are shared across every entrant in a room, so an entrant's
+// progress (revealed letters, solved words, hints used) must never broadcast to entrants
+// outside their own team (or, in individual mode, to anyone but themselves) — otherwise
+// they'd be handed answers other entrants have already worked out. The host is always
+// included since they're trusted to see every entrant's board.
+function roundEventRecipients(room: Room, entrantId: string): string[] {
+  const recipients =
+    room.mode === "team"
+      ? room.getPlayers().filter((p) => p.teamId === entrantId).map((p) => p.socketId)
+      : [entrantId];
+  return [...new Set([...recipients, room.hostSocketId])];
+}
+
+function emitToRoundEventRecipients(io: Server, room: Room, entrantId: string, event: string, payload: unknown): void {
+  for (const socketId of roundEventRecipients(room, entrantId)) {
+    io.to(socketId).emit(event, payload);
+  }
+}
+
 export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManager: RoomManager): void {
   socket.on(
     "player:submitGuess",
@@ -43,11 +62,14 @@ export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManage
       }
 
       room.currentRound!.entrantChains.set(entrantId, result.state);
-      io.to(room.code).emit("board:updated", { entrantId, view: toPublicBoardView(result.state) });
+      emitToRoundEventRecipients(io, room, entrantId, "board:updated", {
+        entrantId,
+        view: toPublicBoardView(result.state),
+      });
 
       if (result.correct) {
         const player = room.getPlayers().find((p) => p.socketId === socket.id);
-        io.to(room.code).emit("round:activity", {
+        emitToRoundEventRecipients(io, room, entrantId, "round:activity", {
           type: "correct",
           entrantId,
           nickname: player?.nickname ?? "Someone",
@@ -58,7 +80,7 @@ export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManage
 
       if (result.correct && isComplete(result.state) && !room.currentRound!.finishedAt.has(entrantId)) {
         room.currentRound!.finishedAt.set(entrantId, Date.now());
-        io.to(room.code).emit("player:chainComplete", { entrantId });
+        emitToRoundEventRecipients(io, room, entrantId, "player:chainComplete", { entrantId });
       }
 
       callback({ success: true, correct: result.correct });
@@ -95,10 +117,13 @@ export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManage
       }
 
       room.currentRound!.entrantChains.set(entrantId, nextState);
-      io.to(room.code).emit("board:updated", { entrantId, view: toPublicBoardView(nextState) });
+      emitToRoundEventRecipients(io, room, entrantId, "board:updated", {
+        entrantId,
+        view: toPublicBoardView(nextState),
+      });
 
       const player = room.getPlayers().find((p) => p.socketId === socket.id);
-      io.to(room.code).emit("round:activity", {
+      emitToRoundEventRecipients(io, room, entrantId, "round:activity", {
         type: "hint",
         entrantId,
         nickname: player?.nickname ?? "Someone",
@@ -119,10 +144,13 @@ export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManage
       return;
     }
     const player = room.getPlayers().find((p) => p.socketId === socket.id);
-    socket.to(room.code).emit("board:typing", {
-      entrantId,
-      nickname: player?.nickname ?? "Someone",
-      rowIndex: payload.rowIndex,
-    });
+    for (const socketId of roundEventRecipients(room, entrantId)) {
+      if (socketId === socket.id) continue;
+      io.to(socketId).emit("board:typing", {
+        entrantId,
+        nickname: player?.nickname ?? "Someone",
+        rowIndex: payload.rowIndex,
+      });
+    }
   });
 }

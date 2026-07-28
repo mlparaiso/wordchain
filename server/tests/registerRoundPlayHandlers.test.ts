@@ -29,7 +29,9 @@ describe("player:submitGuess", () => {
     const host: Socket = ioClient(url);
     await new Promise<void>((resolve) => host.on("connect", resolve));
     const createPayload =
-      mode === "team" ? { mode, teams: [{ id: "t1", name: "Red Team" }] } : { mode };
+      mode === "team"
+        ? { mode, teams: [{ id: "t1", name: "Red Team" }, { id: "t2", name: "Blue Team" }] }
+        : { mode };
     const { code } = await new Promise<{ code: string }>((resolve) => {
       host.emit("host:createRoom", createPayload, resolve);
     });
@@ -49,17 +51,28 @@ describe("player:submitGuess", () => {
       await new Promise<void>((resolve) => teammate!.emit("player:selectTeam", { teamId: "t1" }, () => resolve()));
     }
 
+    // An unrelated entrant sharing the same room/round — on a rival team (team mode) or
+    // simply another individual (individual mode) — used to prove round-play events don't
+    // leak to entrants who aren't the acting entrant's own team/self.
+    const rival: Socket = ioClient(url);
+    await new Promise<void>((resolve) => rival.on("connect", resolve));
+    await new Promise<void>((resolve) => rival.emit("player:joinRoom", { code, nickname: "Riley" }, () => resolve()));
+    if (mode === "team") {
+      await new Promise<void>((resolve) => rival.emit("player:selectTeam", { teamId: "t2" }, () => resolve()));
+    }
+
     await new Promise<void>((resolve) => host.emit("host:startRound", { puzzle: PUZZLE }, () => resolve()));
 
     cleanup = () => {
       host.close();
       player.close();
       teammate?.close();
+      rival.close();
       io.close();
       httpServer.close();
     };
 
-    return { host, player, teammate, roomManager, code };
+    return { host, player, teammate, rival, roomManager, code };
   }
 
   it("accepts a correct guess and broadcasts the updated board", async () => {
@@ -146,6 +159,56 @@ describe("player:submitGuess", () => {
       player.emit("player:submitGuess", { rowIndex: 0, guess: "HOT" }, resolve);
     });
     expect(response.success).toBe(false);
+  });
+
+  it("does not leak round:activity to an individual player outside the acting player's team", async () => {
+    const { player, rival } = await setupActiveRound("team");
+
+    let rivalSawActivity = false;
+    rival.on("round:activity", () => {
+      rivalSawActivity = true;
+    });
+    await new Promise<void>((resolve) => player.emit("player:submitGuess", { rowIndex: 1, guess: "DOG" }, () => resolve()));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(rivalSawActivity).toBe(false);
+  });
+
+  it("does not leak round:activity to another individual player in individual mode", async () => {
+    const { player, rival } = await setupActiveRound("individual");
+
+    let rivalSawActivity = false;
+    rival.on("round:activity", () => {
+      rivalSawActivity = true;
+    });
+    await new Promise<void>((resolve) => player.emit("player:submitGuess", { rowIndex: 1, guess: "DOG" }, () => resolve()));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(rivalSawActivity).toBe(false);
+  });
+
+  it("does not leak board:updated (revealed letters) to entrants outside the acting entrant's team", async () => {
+    const { player, rival } = await setupActiveRound("team");
+
+    let rivalSawUpdate = false;
+    rival.on("board:updated", () => {
+      rivalSawUpdate = true;
+    });
+    await new Promise<void>((resolve) => player.emit("player:useHint", { rowIndex: 1 }, () => resolve()));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(rivalSawUpdate).toBe(false);
+  });
+
+  it("still delivers round:activity and board:updated to the host regardless of team", async () => {
+    const { host, player } = await setupActiveRound("team");
+
+    const hostActivityPromise = new Promise<{ nickname: string }>((resolve) => host.once("round:activity", resolve));
+    const hostUpdatePromise = new Promise<{ entrantId: string }>((resolve) => host.once("board:updated", resolve));
+    await new Promise<void>((resolve) => player.emit("player:submitGuess", { rowIndex: 1, guess: "DOG" }, () => resolve()));
+
+    expect((await hostActivityPromise).nickname).toBe("Alex");
+    expect((await hostUpdatePromise).entrantId).toBe("t1");
   });
 
   it("shares one board across teammates", async () => {
