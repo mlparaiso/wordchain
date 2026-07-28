@@ -89,7 +89,7 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
   const blankRows = roundData.rows.filter((row) => !row.isClue);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-6 flex flex-col gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-3 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between text-white font-display font-bold">
         <span className="uppercase tracking-widest text-sm opacity-90">{roundData.category}</span>
         <span className="font-mono tabular-nums">{elapsedSeconds}s</span>
@@ -103,7 +103,7 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        <div className="grid grid-cols-3 gap-4 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 flex-1">
           {entrantIds.map((entrantId) => {
             const view = boards[entrantId] ?? defaultBoardView();
             return (

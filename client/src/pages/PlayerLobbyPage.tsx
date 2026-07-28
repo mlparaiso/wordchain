@@ -37,8 +37,8 @@ export function PlayerLobbyPage({ mode, teams, onTeamSelected, onRoundStarted }:
   const showTeamChoice = mode === "team" && selectedTeamId === null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-sm flex flex-col gap-4 items-center text-center">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex items-center justify-center p-4 sm:p-6">
+      <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-sm flex flex-col gap-4 items-center text-center">
         {showTeamChoice ? (
           <>
             <h1 className="font-display text-xl font-extrabold text-chain-locked">Pick a team</h1>

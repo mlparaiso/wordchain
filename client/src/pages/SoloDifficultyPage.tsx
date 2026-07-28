@@ -24,7 +24,7 @@ export function SoloDifficultyPage({ onPuzzleChosen, onBack }: SoloDifficultyPag
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6 p-4 sm:p-6">
       <h1 className="font-display text-3xl text-white font-extrabold">Solo Practice</h1>
       <p className="text-white/80 font-body text-center">
         Pick a difficulty — you'll get a random puzzle from that tier.

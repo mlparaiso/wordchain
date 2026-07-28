@@ -36,7 +36,7 @@ export function CustomPuzzleCreatorPage({ onSaved, onCancel }: CustomPuzzleCreat
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-8 flex flex-col items-center gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-4 sm:p-8 flex flex-col items-center gap-6">
       <h1 className="font-display text-2xl text-white font-extrabold">Create a puzzle</h1>
       <div className="bg-white rounded-2xl p-6 w-full max-w-md flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm font-semibold text-chain-locked">

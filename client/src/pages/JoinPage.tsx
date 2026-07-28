@@ -57,8 +57,8 @@ export function JoinPage({ onJoined }: JoinPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-sm flex flex-col gap-4 shadow-xl">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex items-center justify-center p-4 sm:p-6">
+      <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-sm flex flex-col gap-4 shadow-xl">
         <h1 className="font-display text-2xl font-extrabold text-chain-locked text-center">Join a game</h1>
 
         <label className="flex flex-col gap-1 text-sm font-semibold text-chain-locked">

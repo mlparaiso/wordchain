@@ -108,7 +108,7 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-6 flex flex-col items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-3 sm:p-6 flex flex-col items-center gap-4">
       <div className="flex items-center justify-between w-full max-w-md text-white font-display font-bold">
         <span className="uppercase tracking-widest text-sm opacity-90">{roundData.category}</span>
         <span className="relative font-mono tabular-nums">

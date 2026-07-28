@@ -18,7 +18,7 @@ export function LetterCell({ letter, state }: LetterCellProps) {
     <div
       data-testid="letter-cell"
       data-state={state}
-      className={`w-9 h-9 rounded-lg flex items-center justify-center font-display font-black text-lg uppercase ${STATE_CLASSES[state]}`}
+      className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center font-display font-black text-base sm:text-lg uppercase shrink-0 ${STATE_CLASSES[state]}`}
     >
       {letter ?? ""}
     </div>

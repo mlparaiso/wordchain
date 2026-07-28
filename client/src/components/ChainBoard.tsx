@@ -91,7 +91,13 @@ export function ChainBoard({
   }
 
   return (
-    <div className="flex flex-col items-start">
+    // min-w-0 lets this shrink below its content's width when it's a flex child of a
+    // fixed-width container (e.g. the max-w-md wrapper on the player/solo pages) — flex
+    // items default to min-width:auto, which otherwise forces the whole page wider than
+    // the viewport on phones once a chain has a long word in it. overflow-x-auto is the
+    // fallback for any row that's still too wide to fit even at the smallest cell size,
+    // so it scrolls within the board instead of breaking the page layout.
+    <div className="flex flex-col items-start min-w-0 max-w-full overflow-x-auto">
       {rows.map((row, rowPosition) => {
         const isActive = activeRows.includes(row.index);
         const solvedFully = isRowSolved(row.index);

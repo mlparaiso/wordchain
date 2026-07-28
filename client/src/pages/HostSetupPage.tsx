@@ -61,7 +61,7 @@ export function HostSetupPage({ onOpenCreator, onRoomCreated }: HostSetupPagePro
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-8 flex flex-col items-center gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-4 sm:p-8 flex flex-col items-center gap-6">
       <h1 className="font-display text-3xl text-white font-extrabold">Set up your game</h1>
 
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg flex flex-col gap-4">

@@ -13,7 +13,7 @@ export function SoloResultsPage({ summary, onPlayAgain, onBackToMenu }: SoloResu
   const solveTimeSeconds = summary.rawTimeSeconds - wrongGuessPenalty - hintPenalty;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6 p-4 sm:p-6">
       <h1 className="font-display text-3xl text-white font-extrabold uppercase tracking-wide">🎉 Solved!</h1>
 
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm flex flex-col gap-3">
