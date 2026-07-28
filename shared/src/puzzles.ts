@@ -89,6 +89,34 @@ export const PUZZLE_LIBRARY: Puzzle[] = [
     words: ["DRAWING", "PAPER", "CLIP", "BOARD", "ROOM", "NUMBER", "PAD"],
     timeCapSeconds: 105,
   },
+  {
+    id: "sun-pipe",
+    category: "Everyday",
+    difficulty: "easy",
+    words: ["SUN", "FLOWER", "POT", "HOLE", "PUNCH", "BAG", "PIPE"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "basket-tender",
+    category: "Sports",
+    difficulty: "easy",
+    words: ["BASKET", "BALL", "PARK", "WAY", "SIDE", "BAR", "TENDER"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "pizza-way",
+    category: "Food",
+    difficulty: "easy",
+    words: ["PIZZA", "BOX", "CAR", "POOL", "SIDE", "WALK", "WAY"],
+    timeCapSeconds: 105,
+  },
+  {
+    id: "home-less",
+    category: "School",
+    difficulty: "easy",
+    words: ["HOME", "WORK", "OUT", "FIELD", "TRIP", "WIRE", "LESS"],
+    timeCapSeconds: 105,
+  },
 
   // --- Medium: 9 words, 7 blanks (135s) ---
   {
@@ -140,6 +168,34 @@ export const PUZZLE_LIBRARY: Puzzle[] = [
     words: ["NATIONAL", "PARK", "BENCH", "PRESS", "CONFERENCE", "ROOM", "TEMPERATURE", "SCALE", "MODEL"],
     timeCapSeconds: 135,
   },
+  {
+    id: "base-lift",
+    category: "Sports",
+    difficulty: "medium",
+    words: ["BASE", "BALL", "PARK", "RANGER", "STATION", "WAGON", "WHEEL", "CHAIR", "LIFT"],
+    timeCapSeconds: 135,
+  },
+  {
+    id: "snow-session",
+    category: "Everyday",
+    difficulty: "medium",
+    words: ["SNOW", "BALL", "GAME", "SHOW", "CASE", "STUDY", "GROUP", "THERAPY", "SESSION"],
+    timeCapSeconds: 135,
+  },
+  {
+    id: "drum-guard",
+    category: "School",
+    difficulty: "medium",
+    words: ["DRUM", "STICK", "FIGURE", "HEAD", "LINE", "UP", "GRADE", "POINT", "GUARD"],
+    timeCapSeconds: 135,
+  },
+  {
+    id: "space-rail",
+    category: "Everyday",
+    difficulty: "medium",
+    words: ["SPACE", "SUIT", "CASE", "STUDY", "HALL", "WAY", "POINT", "GUARD", "RAIL"],
+    timeCapSeconds: 135,
+  },
 
   // --- Hard: 11 words, 9 blanks (165s) ---
   {
@@ -182,6 +238,34 @@ export const PUZZLE_LIBRARY: Puzzle[] = [
     category: "Sports",
     difficulty: "hard",
     words: ["KITCHEN", "SINK", "HOLE", "PUNCH", "LINE", "DRIVE", "WAY", "SIDE", "WALK", "OUT", "FIELD"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "coffee-town",
+    category: "Food",
+    difficulty: "hard",
+    words: ["COFFEE", "TABLE", "SALT", "WATER", "MELON", "PATCH", "WORK", "OUT", "LET", "DOWN", "TOWN"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "soccer-trip",
+    category: "Sports",
+    difficulty: "hard",
+    words: ["SOCCER", "BALL", "GAME", "NIGHT", "STAND", "STILL", "LIFE", "GUARD", "RAIL", "ROAD", "TRIP"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "library-pack",
+    category: "School",
+    difficulty: "hard",
+    words: ["LIBRARY", "BOOK", "WORM", "HOLE", "PUNCH", "CARD", "BOARD", "WALK", "OUT", "BACK", "PACK"],
+    timeCapSeconds: 165,
+  },
+  {
+    id: "butter-law",
+    category: "Food",
+    difficulty: "hard",
+    words: ["BUTTER", "FLY", "OVER", "COAT", "TAIL", "GATE", "CRASH", "COURSE", "WORK", "OUT", "LAW"],
     timeCapSeconds: 165,
   },
 ];
