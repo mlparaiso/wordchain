@@ -114,7 +114,9 @@ describe("applyHint", () => {
   });
 
   it("does not reveal past the word's length", () => {
-    let state = createChainState(["HOT", "DOG", "KICK"]);
+    // Row 1 (not the chain's middle blank) so this only measures applyHint's own
+    // exhaustion behavior, independent of the free starting-hint reveal below.
+    let state = createChainState(CHAIN);
     state = applyHint(state, 1); // reveals 1 of 3
     state = applyHint(state, 1); // reveals 2 of 3
     state = applyHint(state, 1); // reveals 3 of 3
@@ -142,22 +144,52 @@ describe("toPublicRows", () => {
 
 describe("toPublicBoardView", () => {
   it("reveals full text for solved rows and a hinted prefix for active rows", () => {
-    let state = createChainState(["HOT", "DOG", "TAG", "KICK"]);
+    // Rows 1 and 4 (not CHAIN's middle blanks, 2 and 3) so this only measures the
+    // solve/hint reveal, independent of the free starting-hint reveal tested below.
+    let state = createChainState(CHAIN);
     state = submitGuess(state, 1, "DOG").state; // topSolved -> 1
-    state = applyHint(state, 2); // reveal 1 letter of TAG
+    state = applyHint(state, 4); // reveal 1 letter of SIDE
 
     const view = toPublicBoardView(state);
     expect(view.revealedText[0]).toBe("HOT"); // clue
     expect(view.revealedText[1]).toBe("DOG"); // solved
-    expect(view.revealedText[2]).toBe("T"); // hinted prefix only
-    expect(view.revealedText[3]).toBe("KICK"); // clue
+    expect(view.revealedText[4]).toBe("S"); // hinted prefix only
+    expect(view.revealedText[5]).toBe("KICK"); // clue
     expect(view.penaltySeconds).toBe(5);
   });
 
-  it("reveals nothing for an untouched middle row", () => {
-    const state = createChainState(["HOT", "DOG", "TAG", "ALONG", "SIDE", "KICK"]);
+  it("reveals nothing for an untouched non-middle row", () => {
+    const state = createChainState(CHAIN);
     const view = toPublicBoardView(state);
-    expect(view.revealedText[2]).toBeUndefined();
-    expect(view.revealedText[3]).toBeUndefined();
+    expect(view.revealedText[1]).toBeUndefined();
+    expect(view.revealedText[4]).toBeUndefined();
+  });
+});
+
+describe("createChainState starting hint", () => {
+  it("reveals the first letter of the single middle blank when there's an odd number of blanks", () => {
+    // 7 words -> blanks at indices 1-5 (5 blanks, odd) -> middle is index 3 alone.
+    const state = createChainState(["HOT", "DOG", "TAG", "ALONG", "SIDE", "WALK", "KICK"]);
+    expect(state.revealedLetters).toEqual([0, 0, 0, 1, 0, 0, 0]);
+    expect(toPublicBoardView(state).revealedText[3]).toBe("A");
+  });
+
+  it("reveals the first letter of both middle blanks when there's an even number of blanks", () => {
+    // CHAIN is 6 words -> blanks at indices 1-4 (4 blanks, even) -> middle is indices 2 and 3.
+    const state = createChainState(CHAIN);
+    expect(state.revealedLetters).toEqual([0, 0, 1, 1, 0, 0]);
+    const view = toPublicBoardView(state);
+    expect(view.revealedText[2]).toBe("T");
+    expect(view.revealedText[3]).toBe("A");
+  });
+
+  it("does not charge a time penalty for the free starting reveal", () => {
+    const state = createChainState(CHAIN);
+    expect(state.penaltySeconds).toBe(0);
+  });
+
+  it("leaves a minimal 3-word chain's only blank with its first letter revealed", () => {
+    const state = createChainState(["HOT", "DOG", "KICK"]);
+    expect(state.revealedLetters).toEqual([0, 1, 0]);
   });
 });

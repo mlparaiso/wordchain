@@ -1,7 +1,8 @@
 import type { Server, Socket } from "socket.io";
-import { toPublicRows, validatePuzzleWords, type Puzzle } from "@wordchain/shared";
+import { toPublicBoardView, toPublicRows, validatePuzzleWords, type Puzzle } from "@wordchain/shared";
 import type { RoomManager } from "../rooms/RoomManager.js";
 import { endRound } from "../rooms/scoreRound.js";
+import { emitToRoundEventRecipients } from "./roundEventRecipients.js";
 
 export function registerHostRoundHandlers(io: Server, socket: Socket, roomManager: RoomManager): void {
   socket.on(
@@ -40,6 +41,17 @@ export function registerHostRoundHandlers(io: Server, socket: Socket, roomManage
         startedAt: room.currentRound!.startedAt,
         isLastRound: payload.isLastRound ?? false,
       });
+
+      // Each chain starts with its middle blank(s) already showing a free first letter
+      // (see createChainState) — clients can't compute that themselves since they don't
+      // know the answer words, so push the real initial view rather than letting a
+      // client's own guess (all-blank) stand until its first board:updated.
+      for (const [entrantId, chainState] of room.currentRound!.entrantChains) {
+        emitToRoundEventRecipients(io, room, entrantId, "board:updated", {
+          entrantId,
+          view: toPublicBoardView(chainState),
+        });
+      }
 
       room.currentRound!.timeoutHandle = setTimeout(
         () => endRound(io, room),

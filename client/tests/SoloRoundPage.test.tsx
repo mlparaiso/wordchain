@@ -28,7 +28,9 @@ describe("SoloRoundPage", () => {
     const onFinished = vi.fn();
     render(<SoloRoundPage puzzle={PUZZLE} onFinished={onFinished} onQuit={vi.fn()} />);
 
-    await userEvent.type(screen.getByLabelText("Guess for row 1"), "DOG{enter}");
+    // DOG is the chain's only (and therefore middle) blank, so its first letter is
+    // already revealed for free as the starting hint — only "OG" needs typing.
+    await userEvent.type(screen.getByLabelText("Guess for row 1"), "OG{enter}");
 
     expect(onFinished).toHaveBeenCalledTimes(1);
     const summary = onFinished.mock.calls[0][0];
@@ -44,9 +46,11 @@ describe("SoloRoundPage", () => {
     const onFinished = vi.fn();
     render(<SoloRoundPage puzzle={PUZZLE} onFinished={onFinished} onQuit={vi.fn()} />);
 
+    // DOG's first letter is already revealed for free (it's the chain's only blank),
+    // so only the remaining letters need typing for each guess.
     const input = screen.getByLabelText("Guess for row 1");
-    await userEvent.type(input, "CAT{enter}");
-    await userEvent.type(input, "DOG{enter}");
+    await userEvent.type(input, "AT{enter}"); // "DAT" - wrong
+    await userEvent.type(input, "OG{enter}"); // "DOG" - correct
 
     expect(onFinished.mock.calls[0][0].wrongGuesses).toBe(1);
   });
@@ -55,9 +59,10 @@ describe("SoloRoundPage", () => {
     const onFinished = vi.fn();
     render(<SoloRoundPage puzzle={PUZZLE} onFinished={onFinished} onQuit={vi.fn()} />);
 
+    // The starting hint already reveals "D" for free; this explicit hint reveals the
+    // second letter ("DO"), so only the final letter needs typing.
     await userEvent.click(screen.getByRole("button", { name: "💡" }));
-    // The hint pre-fills "D" into the guess, so only the remaining letters need typing.
-    await userEvent.type(screen.getByLabelText("Guess for row 1"), "OG{enter}");
+    await userEvent.type(screen.getByLabelText("Guess for row 1"), "G{enter}");
 
     expect(onFinished.mock.calls[0][0].hintsUsed).toBe(1);
   });

@@ -2,30 +2,12 @@ import type { Server, Socket } from "socket.io";
 import { applyHint, isComplete, submitGuess, toPublicBoardView } from "@wordchain/shared";
 import type { RoomManager } from "../rooms/RoomManager.js";
 import type { Room } from "../rooms/Room.js";
+import { roundEventRecipients, emitToRoundEventRecipients } from "./roundEventRecipients.js";
 
 function resolveActiveRoom(socket: Socket, roomManager: RoomManager): Room | undefined {
   const roomCode = socket.data.roomCode as string | undefined;
   const room = roomCode ? roomManager.getRoom(roomCode) : undefined;
   return room?.currentRound ? room : undefined;
-}
-
-// The board and puzzle answers are shared across every entrant in a room, so an entrant's
-// progress (revealed letters, solved words, hints used) must never broadcast to entrants
-// outside their own team (or, in individual mode, to anyone but themselves) — otherwise
-// they'd be handed answers other entrants have already worked out. The host is always
-// included since they're trusted to see every entrant's board.
-function roundEventRecipients(room: Room, entrantId: string): string[] {
-  const recipients =
-    room.mode === "team"
-      ? room.getPlayers().filter((p) => p.teamId === entrantId).map((p) => p.socketId)
-      : [entrantId];
-  return [...new Set([...recipients, room.hostSocketId])];
-}
-
-function emitToRoundEventRecipients(io: Server, room: Room, entrantId: string, event: string, payload: unknown): void {
-  for (const socketId of roundEventRecipients(room, entrantId)) {
-    io.to(socketId).emit(event, payload);
-  }
 }
 
 export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManager: RoomManager): void {

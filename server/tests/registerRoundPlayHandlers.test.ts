@@ -61,7 +61,34 @@ describe("player:submitGuess", () => {
       await new Promise<void>((resolve) => rival.emit("player:selectTeam", { teamId: "t2" }, () => resolve()));
     }
 
-    await new Promise<void>((resolve) => host.emit("host:startRound", { puzzle: PUZZLE }, () => resolve()));
+    // host:startRound immediately pushes each entrant chain's starting board:updated
+    // (see registerHostRoundHandlers.ts) — drain those here so a test's own
+    // `.once("board:updated", ...)` for a later guess/hint doesn't race with, and
+    // accidentally consume, this initial push instead.
+    function drainInitialBoardUpdates(socket: Socket, count: number): Promise<void> {
+      if (count <= 0) return Promise.resolve();
+      return new Promise((resolve) => {
+        let remaining = count;
+        function handler() {
+          remaining -= 1;
+          if (remaining <= 0) {
+            socket.off("board:updated", handler);
+            resolve();
+          }
+        }
+        socket.on("board:updated", handler);
+      });
+    }
+
+    // Two distinct entrants exist either way: player (+ teammate, sharing one team
+    // entrant) and rival — so the host always drains exactly two initial pushes.
+    await Promise.all([
+      new Promise<void>((resolve) => host.emit("host:startRound", { puzzle: PUZZLE }, () => resolve())),
+      drainInitialBoardUpdates(player, 1),
+      teammate ? drainInitialBoardUpdates(teammate, 1) : Promise.resolve(),
+      drainInitialBoardUpdates(rival, 1),
+      drainInitialBoardUpdates(host, 2),
+    ]);
 
     cleanup = () => {
       host.close();
@@ -235,7 +262,9 @@ describe("player:submitGuess", () => {
 
       expect(response.success).toBe(true);
       const update = await updatePromise;
-      expect(update.view.revealedText[1]).toBe("D");
+      // DOG's first letter is already revealed for free as the chain's only blank
+      // (the starting hint), so this hint reveals the second letter.
+      expect(update.view.revealedText[1]).toBe("DO");
       expect(update.view.penaltySeconds).toBe(5);
     });
 

@@ -63,6 +63,25 @@ describe("host:startRound", () => {
     expect(roomManager.getRoom(code)?.currentRound?.puzzle.id).toBe("test-puzzle");
   });
 
+  it("immediately pushes each entrant's starting board, including the free middle-letter reveal", async () => {
+    const { host, player } = await setupRoomWithHostAndPlayer();
+
+    // PUZZLE's only blank (DOG, row 1) is the chain's middle blank, so it starts with
+    // its first letter already revealed (see createChainState) — clients can't compute
+    // that themselves since they don't know the answer, so the server must push it
+    // rather than leaving the player's own optimistic empty-board guess to stand.
+    const playerUpdatePromise = new Promise<{ entrantId: string; view: { revealedText: Record<number, string> } }>(
+      (resolve) => player.once("board:updated", resolve)
+    );
+    const hostUpdatePromise = new Promise<{ entrantId: string; view: { revealedText: Record<number, string> } }>(
+      (resolve) => host.once("board:updated", resolve)
+    );
+    await new Promise<void>((resolve) => host.emit("host:startRound", { puzzle: PUZZLE }, () => resolve()));
+
+    expect((await playerUpdatePromise).view.revealedText[1]).toBe("D");
+    expect((await hostUpdatePromise).view.revealedText[1]).toBe("D");
+  });
+
   it("rejects host:startRound from a non-host socket", async () => {
     const { player } = await setupRoomWithHostAndPlayer();
 
