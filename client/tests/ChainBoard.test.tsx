@@ -59,6 +59,32 @@ describe("ChainBoard", () => {
     expect(onSubmitGuess).toHaveBeenCalledWith(1, "DOG");
   });
 
+  it("auto-submits the guess once a hint reveals the final letter of a word", async () => {
+    const onSubmitGuess = vi.fn();
+    const { rerender } = render(
+      <ChainBoard rows={ROWS} boardView={INITIAL_VIEW} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />
+    );
+
+    const almostView: PublicBoardView = {
+      topSolved: 0,
+      bottomSolved: 5,
+      revealedText: { 1: "DO" },
+      penaltySeconds: 10,
+    };
+    rerender(<ChainBoard rows={ROWS} boardView={almostView} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />);
+    expect(onSubmitGuess).not.toHaveBeenCalled();
+
+    const fullyHintedView: PublicBoardView = {
+      topSolved: 0,
+      bottomSolved: 5,
+      revealedText: { 1: "DOG" },
+      penaltySeconds: 15,
+    };
+    rerender(<ChainBoard rows={ROWS} boardView={fullyHintedView} onSubmitGuess={onSubmitGuess} onHint={vi.fn()} />);
+
+    expect(onSubmitGuess).toHaveBeenCalledWith(1, "DOG");
+  });
+
   it("re-syncs the typed prefix if a hint reveals a letter the player had gotten wrong", async () => {
     const onSubmitGuess = vi.fn();
     const { rerender } = render(

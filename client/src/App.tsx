@@ -98,6 +98,21 @@ export default function App() {
     };
   }, []);
 
+  // The host can end a session (from the final results screen) with their socket still
+  // connected, so — unlike room:hostLeft — nothing would otherwise tell a player still
+  // sitting on that screen that the game is over; they'd be stuck there indefinitely.
+  useEffect(() => {
+    const socket = getSocket();
+    function handleSessionEnded() {
+      setPlayerSession(null);
+      setScreen({ name: "landing" });
+    }
+    socket.on("room:sessionEnded", handleSessionEnded);
+    return () => {
+      socket.off("room:sessionEnded");
+    };
+  }, []);
+
   if (screen.name === "landing") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6">
@@ -251,6 +266,7 @@ export default function App() {
         isLastRound={isLastRound}
         onAdvance={() => {
           if (isLastRound) {
+            getSocket().emit("host:endSession", {}, () => {});
             setScreen({ name: "landing" });
             return;
           }

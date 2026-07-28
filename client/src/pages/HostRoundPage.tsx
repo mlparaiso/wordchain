@@ -8,7 +8,6 @@ import type {
   RoundStartedPayload,
   TeamInfo,
 } from "@wordchain/shared";
-import { ChainRow, type ChainCellData } from "../components/ChainRow.js";
 import { ActivityFeed, type ActivityEntry } from "../components/ActivityFeed.js";
 import { getSocket } from "../socket.js";
 
@@ -80,15 +79,14 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
   }
 
   function defaultBoardView(): PublicBoardView {
-    const revealedText: Record<number, string> = {};
-    roundData.rows.forEach((row) => {
-      if (row.isClue) revealedText[row.index] = row.text!;
-    });
-    return { topSolved: 0, bottomSolved: roundData.rows.length - 1, revealedText, penaltySeconds: 0 };
+    return { topSolved: 0, bottomSolved: roundData.rows.length - 1, revealedText: {}, penaltySeconds: 0 };
   }
 
   const knownEntrantIds = mode === "team" ? teams.map((t) => t.id) : Object.keys(nicknames);
   const entrantIds = [...new Set([...knownEntrantIds, ...Object.keys(boards)])];
+  const topRow = roundData.rows[0];
+  const bottomRow = roundData.rows[roundData.rows.length - 1];
+  const blankRows = roundData.rows.filter((row) => !row.isClue);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-6 flex flex-col gap-4">
@@ -111,22 +109,28 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
             return (
               <div key={entrantId} className="bg-white/90 rounded-xl p-3">
                 <p className="font-display font-bold text-chain-locked text-sm mb-2">{displayName(entrantId)}</p>
-                <div className="flex flex-col gap-1">
-                  {roundData.rows.map((row) => {
-                    const revealed = view.revealedText[row.index];
-                    const solvedFully = row.index <= view.topSolved || row.index >= view.bottomSolved;
-                    const cells: ChainCellData[] = Array.from({ length: row.length }, (_, i) => ({
-                      letter: revealed?.[i],
-                      state: row.isClue
-                        ? "locked"
-                        : revealed && i < revealed.length
-                          ? solvedFully
-                            ? "solved"
-                            : "hinted"
-                          : "empty",
-                    }));
-                    return <ChainRow key={row.index} cells={cells} showHintButton={false} />;
-                  })}
+                <div className="flex flex-col gap-2">
+                  <p className="font-display font-bold text-chain-locked text-sm uppercase tracking-wide">
+                    {topRow.text}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {blankRows.map((row) => {
+                      const solved = row.index <= view.topSolved || row.index >= view.bottomSolved;
+                      return (
+                        <div
+                          key={row.index}
+                          data-testid="host-progress-box"
+                          data-state={solved ? "solved" : "pending"}
+                          className={`w-6 h-6 rounded-md ${
+                            solved ? "bg-chain-green" : "bg-white/60 border-2 border-dashed border-chain-locked/30"
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <p className="font-display font-bold text-chain-locked text-sm uppercase tracking-wide">
+                    {bottomRow.text}
+                  </p>
                 </div>
               </div>
             );

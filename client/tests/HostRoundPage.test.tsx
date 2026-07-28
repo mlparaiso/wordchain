@@ -110,7 +110,7 @@ describe("HostRoundPage", () => {
     expect(screen.getByText("Alex")).toBeInTheDocument();
   });
 
-  it("distinguishes a hinted letter from a fully solved row", () => {
+  it("shows the top and bottom clue words as text, and one box per blank row", () => {
     render(<HostRoundPage roundData={ROUND_DATA} mode="individual" teams={[]} players={[]} onResults={vi.fn()} />);
     act(() => {
       fakeSocket.trigger("room:playerJoined", { socketId: "p1", nickname: "Alex", teamId: null, connected: true });
@@ -119,8 +119,34 @@ describe("HostRoundPage", () => {
         view: { topSolved: 0, bottomSolved: 2, revealedText: { 0: "HOT", 1: "D", 2: "KICK" }, penaltySeconds: 5 },
       });
     });
-    const hintedCell = screen.getAllByTestId("letter-cell").find((c) => c.textContent === "D");
-    expect(hintedCell).toHaveAttribute("data-state", "hinted");
+    expect(screen.getByText("HOT")).toBeInTheDocument();
+    expect(screen.getByText("KICK")).toBeInTheDocument();
+    expect(screen.getAllByTestId("host-progress-box")).toHaveLength(1);
+  });
+
+  it("does not reveal hinted letters to the host — only whether the row is fully solved", () => {
+    render(<HostRoundPage roundData={ROUND_DATA} mode="individual" teams={[]} players={[]} onResults={vi.fn()} />);
+    act(() => {
+      fakeSocket.trigger("room:playerJoined", { socketId: "p1", nickname: "Alex", teamId: null, connected: true });
+      fakeSocket.trigger("board:updated", {
+        entrantId: "p1",
+        view: { topSolved: 0, bottomSolved: 2, revealedText: { 0: "HOT", 1: "D", 2: "KICK" }, penaltySeconds: 5 },
+      });
+    });
+    expect(screen.queryByText("D")).not.toBeInTheDocument();
+    expect(screen.getByTestId("host-progress-box")).toHaveAttribute("data-state", "pending");
+  });
+
+  it("marks a blank row's box solved once it's fully solved", () => {
+    render(<HostRoundPage roundData={ROUND_DATA} mode="individual" teams={[]} players={[]} onResults={vi.fn()} />);
+    act(() => {
+      fakeSocket.trigger("room:playerJoined", { socketId: "p1", nickname: "Alex", teamId: null, connected: true });
+      fakeSocket.trigger("board:updated", {
+        entrantId: "p1",
+        view: { topSolved: 1, bottomSolved: 2, revealedText: { 0: "HOT", 1: "DOG", 2: "KICK" }, penaltySeconds: 0 },
+      });
+    });
+    expect(screen.getByTestId("host-progress-box")).toHaveAttribute("data-state", "solved");
   });
 
   it("adds an activity entry with the player's name when round:activity fires", () => {

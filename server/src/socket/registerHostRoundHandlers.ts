@@ -66,4 +66,30 @@ export function registerHostRoundHandlers(io: Server, socket: Socket, roomManage
       callback({ success: true });
     }
   );
+
+  socket.on(
+    "host:endSession",
+    (_payload: Record<string, never>, callback: (response: { success: boolean; error?: string }) => void) => {
+      const roomCode = socket.data.roomCode as string | undefined;
+      const room = roomCode ? roomManager.getRoom(roomCode) : undefined;
+      if (!room) {
+        callback({ success: false, error: "Room not found" });
+        return;
+      }
+      if (room.hostSocketId !== socket.id) {
+        callback({ success: false, error: "Only the host can end the session" });
+        return;
+      }
+      if (room.currentRound?.timeoutHandle) clearTimeout(room.currentRound.timeoutHandle);
+
+      io.to(room.code).emit("room:sessionEnded", {});
+      // Without this, the host's socket stays subscribed to this room's broadcasts even
+      // after hosting a new one — a departing player's later disconnect update would leak
+      // into the new room's live board grid (they never emit anything scoped by room code).
+      io.in(room.code).socketsLeave(room.code);
+      socket.data.roomCode = undefined;
+      roomManager.removeRoom(room.code);
+      callback({ success: true });
+    }
+  );
 }

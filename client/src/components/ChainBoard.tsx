@@ -23,6 +23,9 @@ export function ChainBoard({
   const [typedByRow, setTypedByRow] = useState<Record<number, string>>({});
   const activeRows = getActiveRowsFromBounds(boardView.topSolved, boardView.bottomSolved);
   const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  // Tracks each row's previously-revealed hint text so we can tell exactly
+  // when a hint completes a word (as opposed to re-running on every render).
+  const prevRevealedRef = useRef<Record<number, string>>({});
 
   // A hint reveals a letter server-side (boardView.revealedText), but the
   // player still has to submit the *full* word to solve the row. Without
@@ -30,6 +33,21 @@ export function ChainBoard({
   // gets typed/submitted, so continuing to type only the remaining letters
   // produces a guess that's silently misaligned with the real word.
   useEffect(() => {
+    // Detect rows a hint just fully revealed *before* touching typedByRow —
+    // setTypedByRow's updater runs lazily on the next render, so collecting
+    // this list inside that callback would read it back empty right here.
+    const completedByHint: Array<{ index: number; guess: string }> = [];
+    for (const row of rows) {
+      if (row.isClue) continue;
+      const revealed = boardView.revealedText[row.index];
+      if (!revealed) continue;
+      const previouslyRevealed = prevRevealedRef.current[row.index] ?? "";
+      if (revealed.length === row.length && previouslyRevealed.length < row.length && activeRows.includes(row.index)) {
+        completedByHint.push({ index: row.index, guess: revealed });
+      }
+      prevRevealedRef.current[row.index] = revealed;
+    }
+
     setTypedByRow((prev) => {
       let changed = false;
       const next = { ...prev };
@@ -45,7 +63,9 @@ export function ChainBoard({
       }
       return changed ? next : prev;
     });
-  }, [boardView, rows]);
+
+    completedByHint.forEach(({ index, guess }) => onSubmitGuess(index, guess));
+  }, [boardView, rows, activeRows, onSubmitGuess]);
 
   function isRowSolved(rowIndex: number): boolean {
     return rowIndex <= boardView.topSolved || rowIndex >= boardView.bottomSolved;

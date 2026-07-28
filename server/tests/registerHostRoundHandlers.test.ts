@@ -214,3 +214,117 @@ describe("round ending", () => {
     expect(results.results).toHaveLength(1);
   }, 2000);
 });
+
+describe("session ending", () => {
+  let cleanup: (() => void) | undefined;
+
+  afterEach(() => {
+    cleanup?.();
+    cleanup = undefined;
+  });
+
+  it("removes the room and tells everyone still in it when host:endSession fires", async () => {
+    const { httpServer, io, roomManager } = createServer();
+    await new Promise<void>((resolve) => httpServer.listen(0, resolve));
+    const address = httpServer.address();
+    if (typeof address !== "object" || address === null) throw new Error("no port");
+    const url = `http://localhost:${address.port}`;
+
+    const host: Socket = ioClient(url);
+    await new Promise<void>((resolve) => host.on("connect", resolve));
+    const { code } = await new Promise<{ code: string }>((resolve) => {
+      host.emit("host:createRoom", { mode: "individual" }, resolve);
+    });
+    const player: Socket = ioClient(url);
+    await new Promise<void>((resolve) => player.on("connect", resolve));
+    await new Promise<void>((resolve) => player.emit("player:joinRoom", { code, nickname: "Alex" }, () => resolve()));
+
+    cleanup = () => {
+      host.close();
+      player.close();
+      io.close();
+      httpServer.close();
+    };
+
+    const sessionEndedPromise = new Promise<void>((resolve) => {
+      player.once("room:sessionEnded", () => resolve());
+    });
+    const response = await new Promise<{ success: boolean }>((resolve) => {
+      host.emit("host:endSession", {}, resolve);
+    });
+
+    expect(response.success).toBe(true);
+    await sessionEndedPromise;
+    expect(roomManager.getRoom(code)).toBeUndefined();
+  });
+
+  it("rejects host:endSession from a non-host socket", async () => {
+    const { httpServer, io } = createServer();
+    await new Promise<void>((resolve) => httpServer.listen(0, resolve));
+    const address = httpServer.address();
+    if (typeof address !== "object" || address === null) throw new Error("no port");
+    const url = `http://localhost:${address.port}`;
+
+    const host: Socket = ioClient(url);
+    await new Promise<void>((resolve) => host.on("connect", resolve));
+    const { code } = await new Promise<{ code: string }>((resolve) => {
+      host.emit("host:createRoom", { mode: "individual" }, resolve);
+    });
+    const player: Socket = ioClient(url);
+    await new Promise<void>((resolve) => player.on("connect", resolve));
+    await new Promise<void>((resolve) => player.emit("player:joinRoom", { code, nickname: "Alex" }, () => resolve()));
+
+    cleanup = () => {
+      host.close();
+      player.close();
+      io.close();
+      httpServer.close();
+    };
+
+    const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+      player.emit("host:endSession", {}, resolve);
+    });
+
+    expect(response.success).toBe(false);
+    expect(response.error).toMatch(/host/i);
+  });
+
+  it("removes the host's socket from the old room's broadcast channel, so a stray update can't leak into a new room", async () => {
+    const { httpServer, io } = createServer();
+    await new Promise<void>((resolve) => httpServer.listen(0, resolve));
+    const address = httpServer.address();
+    if (typeof address !== "object" || address === null) throw new Error("no port");
+    const url = `http://localhost:${address.port}`;
+
+    const host: Socket = ioClient(url);
+    await new Promise<void>((resolve) => host.on("connect", resolve));
+    const { code: oldCode } = await new Promise<{ code: string }>((resolve) => {
+      host.emit("host:createRoom", { mode: "individual" }, resolve);
+    });
+
+    cleanup = () => {
+      host.close();
+      io.close();
+      httpServer.close();
+    };
+
+    await new Promise<void>((resolve) => host.emit("host:endSession", {}, () => resolve()));
+
+    // Host starts a second room on the same socket, as happens when they host again right away.
+    const { code: newCode } = await new Promise<{ code: string }>((resolve) => {
+      host.emit("host:createRoom", { mode: "individual" }, resolve);
+    });
+    expect(newCode).not.toBe(oldCode);
+
+    let leaked = false;
+    host.once("room:playerUpdated", () => {
+      leaked = true;
+    });
+    // Simulate a stray broadcast to the old room's channel (e.g. a departing player's own
+    // disconnect handling) — the host must no longer be a member of it to receive this.
+    io.to(oldCode).emit("room:playerUpdated", { socketId: "ghost", nickname: "Ghost", teamId: null, connected: false });
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(leaked).toBe(false);
+  });
+});
