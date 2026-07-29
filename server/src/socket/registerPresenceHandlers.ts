@@ -16,7 +16,14 @@ export function registerPresenceHandlers(
     if (room.hostSocketId === socket.id) {
       // The host has no reconnection path today, so a room they've left behind would
       // otherwise never be cleaned up. Tear it down and let remaining players know.
+      // Mirrors host:endSession's teardown: clear any pending round timeout (otherwise
+      // it fires later against this now-torn-down room, wasting the round's memory and
+      // broadcasting a stray round:results) and evict remaining sockets from the room's
+      // broadcast channel (otherwise a later stray emit — including that same orphaned
+      // timeout — could leak into a new session that happens to reuse this room code).
+      if (room.currentRound?.timeoutHandle) clearTimeout(room.currentRound.timeoutHandle);
       io.to(room.code).emit("room:hostLeft", {});
+      io.in(room.code).socketsLeave(room.code);
       roomManager.removeRoom(room.code);
       return;
     }
