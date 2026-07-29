@@ -1,5 +1,6 @@
 import { HINT_PENALTY_SECONDS, WRONG_GUESS_PENALTY_SECONDS } from "@wordchain/shared";
 import type { SoloRunSummary } from "./SoloRoundPage.js";
+import { Button } from "../components/Button.js";
 
 export interface SoloResultsPageProps {
   summary: SoloRunSummary;
@@ -16,7 +17,7 @@ export function SoloResultsPage({ summary, onPlayAgain, onBackToMenu }: SoloResu
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6 p-4 sm:p-6">
       <h1 className="font-display text-3xl text-white font-extrabold uppercase tracking-wide">🎉 Solved!</h1>
 
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm flex flex-col gap-3">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm flex flex-col gap-3 shadow-xl">
         <div className="flex items-center justify-between">
           <span className="font-body text-chain-locked/70">Final time</span>
           <span className="font-mono font-bold text-chain-purple text-2xl tabular-nums">
@@ -42,20 +43,10 @@ export function SoloResultsPage({ summary, onPlayAgain, onBackToMenu }: SoloResu
       </div>
 
       <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={onPlayAgain}
-          className="bg-chain-yellow shadow-[0_4px_0_#e0b800] rounded-full px-6 py-3 font-display font-extrabold text-chain-locked"
-        >
-          Play Again
-        </button>
-        <button
-          type="button"
-          onClick={onBackToMenu}
-          className="bg-white shadow-[0_4px_0_#cccccc] rounded-full px-6 py-3 font-display font-extrabold text-chain-locked"
-        >
+        <Button onClick={onPlayAgain}>Play Again</Button>
+        <Button variant="secondary" onClick={onBackToMenu}>
           Back to Menu
-        </button>
+        </Button>
       </div>
     </div>
   );
