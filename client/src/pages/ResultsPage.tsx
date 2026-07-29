@@ -33,7 +33,7 @@ export function ResultsPage({ results, totals, role, isLastRound, onAdvance, onN
     const socket = getSocket();
     socket.on("round:started", onNextRoundStarted);
     return () => {
-      socket.off("round:started");
+      socket.off("round:started", onNextRoundStarted);
     };
   }, [role, onNextRoundStarted]);
 

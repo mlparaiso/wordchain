@@ -23,7 +23,7 @@ export function PlayerLobbyPage({ mode, teams, onTeamSelected, onRoundStarted }:
     }
     socket.on("round:started", handleRoundStarted);
     return () => {
-      socket.off("round:started");
+      socket.off("round:started", handleRoundStarted);
     };
   }, [mode, selectedTeamId, onRoundStarted]);
 

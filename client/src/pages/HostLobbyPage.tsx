@@ -31,9 +31,9 @@ export function HostLobbyPage({ roomCode, playlist, onStarted }: HostLobbyPagePr
     socket.on("room:playerLeft", removePlayer);
 
     return () => {
-      socket.off("room:playerJoined");
-      socket.off("room:playerUpdated");
-      socket.off("room:playerLeft");
+      socket.off("room:playerJoined", upsertPlayer);
+      socket.off("room:playerUpdated", upsertPlayer);
+      socket.off("room:playerLeft", removePlayer);
     };
   }, []);
 

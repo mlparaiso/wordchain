@@ -52,11 +52,11 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
     socket.on("round:results", handleResults);
     socket.on("round:activity", handleActivity);
     return () => {
-      socket.off("room:playerJoined");
-      socket.off("room:playerUpdated");
-      socket.off("board:updated");
-      socket.off("round:results");
-      socket.off("round:activity");
+      socket.off("room:playerJoined", rememberNickname);
+      socket.off("room:playerUpdated", rememberNickname);
+      socket.off("board:updated", handleBoardUpdated);
+      socket.off("round:results", handleResults);
+      socket.off("round:activity", handleActivity);
     };
   }, [onResults]);
 
