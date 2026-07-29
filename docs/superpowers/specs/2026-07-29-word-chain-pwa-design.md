@@ -38,9 +38,9 @@ Icon assets are generated with `@vite-pwa/assets-generator`, a companion CLI tha
 - `client/package.json` — add `vite-plugin-pwa` (dependency) and `@vite-pwa/assets-generator` (devDependency, used once via a manual script run, not part of the routine build)
 - `client/vite.config.ts` — add the `VitePWA(...)` plugin block with the manifest/workbox config above
 - `client/pwa-assets.config.ts` — config file for the assets-generator run (source icon path, output sizes/targets)
-- New source icon artwork (e.g. `client/src/assets/pwa-icon.svg`) — a simple placeholder mark in the brand palette
+- New source icon artwork (`client/public/pwa-icon.svg`) — a simple placeholder mark in the brand palette; lives under `public/` (not `src/assets/`) so the generator's own next-to-source output convention writes icons directly into `public/` with no manual relocation
 - Generated icon PNGs under `client/public/` (committed after a one-time generator run, not regenerated on every build)
-- `client/index.html` — no manual edits expected; the plugin auto-injects the manifest link tag and SW registration
+- `client/index.html` — the plugin auto-injects the manifest link tag and SW registration script; a `theme-color` meta tag and `favicon.ico`/`apple-touch-icon` links are added manually, since those aren't covered by the plugin's auto-injection
 
 ## Testing / verification
 
