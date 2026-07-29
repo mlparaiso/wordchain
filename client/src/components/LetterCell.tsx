@@ -6,11 +6,12 @@ export interface LetterCellProps {
 }
 
 const STATE_CLASSES: Record<LetterCellState, string> = {
-  locked: "bg-chain-locked text-white",
-  solved: "bg-chain-green text-white",
+  locked: "bg-chain-locked text-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]",
+  solved: "bg-chain-green text-white shadow-[0_3px_0_#2fa350] animate-tile-pop",
   hinted: "bg-chain-yellow text-chain-locked shadow-[0_3px_0_#e0b800]",
-  typing: "bg-white text-chain-purple border-2 border-dashed border-chain-purple",
-  empty: "bg-white/40 border-2 border-dashed border-white/70",
+  typing:
+    "bg-white text-chain-purple border-2 border-dashed border-chain-purple shadow-[0_0_0_3px_rgba(108,92,231,0.25)]",
+  empty: "bg-white/40 border-2 border-dashed border-white/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)]",
 };
 
 export function LetterCell({ letter, state }: LetterCellProps) {
