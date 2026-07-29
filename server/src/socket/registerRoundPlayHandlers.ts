@@ -98,19 +98,25 @@ export function registerRoundPlayHandlers(io: Server, socket: Socket, roomManage
         return;
       }
 
-      room.currentRound!.entrantChains.set(entrantId, nextState);
-      emitToRoundEventRecipients(io, room, entrantId, "board:updated", {
-        entrantId,
-        view: toPublicBoardView(nextState),
-      });
+      // applyHint returns the exact same state reference when the row is already fully
+      // revealed (e.g. spamming the hint button after it's exhausted) — nothing changed
+      // and no penalty was charged, so broadcasting an update/activity entry here would
+      // just be a misleading "used a hint" notification and a no-op board refresh.
+      if (nextState !== chainState) {
+        room.currentRound!.entrantChains.set(entrantId, nextState);
+        emitToRoundEventRecipients(io, room, entrantId, "board:updated", {
+          entrantId,
+          view: toPublicBoardView(nextState),
+        });
 
-      const player = room.getPlayers().find((p) => p.socketId === socket.id);
-      emitToRoundEventRecipients(io, room, entrantId, "round:activity", {
-        type: "hint",
-        entrantId,
-        nickname: player?.nickname ?? "Someone",
-        rowIndex: payload.rowIndex,
-      });
+        const player = room.getPlayers().find((p) => p.socketId === socket.id);
+        emitToRoundEventRecipients(io, room, entrantId, "round:activity", {
+          type: "hint",
+          entrantId,
+          nickname: player?.nickname ?? "Someone",
+          rowIndex: payload.rowIndex,
+        });
+      }
 
       callback({ success: true });
     }

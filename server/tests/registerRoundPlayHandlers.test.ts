@@ -279,6 +279,32 @@ describe("player:submitGuess", () => {
       expect(await activityPromise).toMatchObject({ type: "hint", nickname: "Alex", rowIndex: 1 });
     });
 
+    it("does not broadcast round:activity or board:updated for a hint that reveals nothing new", async () => {
+      const { player } = await setupActiveRound();
+
+      // DOG starts with "D" free; two more hints fully reveal it ("DO" -> "DOG").
+      await new Promise<void>((resolve) => player.emit("player:useHint", { rowIndex: 1 }, () => resolve()));
+      await new Promise<void>((resolve) => player.emit("player:useHint", { rowIndex: 1 }, () => resolve()));
+
+      let sawActivity = false;
+      player.on("round:activity", () => {
+        sawActivity = true;
+      });
+      let sawUpdate = false;
+      player.on("board:updated", () => {
+        sawUpdate = true;
+      });
+
+      const response = await new Promise<{ success: boolean }>((resolve) => {
+        player.emit("player:useHint", { rowIndex: 1 }, resolve);
+      });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(response.success).toBe(true);
+      expect(sawActivity).toBe(false);
+      expect(sawUpdate).toBe(false);
+    });
+
     it("rejects a hint on a row that is not active", async () => {
       const { player } = await setupActiveRound();
       const response = await new Promise<{ success: boolean }>((resolve) => {
