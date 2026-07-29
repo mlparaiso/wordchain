@@ -8,6 +8,7 @@ import {
   toPublicRows,
   type Puzzle,
 } from "@wordchain/shared";
+import { Button } from "../components/Button.js";
 import { ChainBoard } from "../components/ChainBoard.js";
 import { isSoundEnabled, playTone, setSoundEnabled } from "../sound.js";
 import { usePenaltyFlashes } from "../usePenaltyFlashes.js";
@@ -112,9 +113,9 @@ export function SoloRoundPage({ puzzle, onFinished, onQuit }: SoloRoundPageProps
         <ChainBoard rows={rows} boardView={boardView} onSubmitGuess={handleSubmitGuess} onHint={handleHint} />
       </div>
 
-      <button type="button" onClick={onQuit} className="text-white/70 text-sm font-semibold underline mt-4">
+      <Button variant="ghost" onClick={onQuit} className="mt-4">
         Give up
-      </button>
+      </Button>
     </div>
   );
 }
