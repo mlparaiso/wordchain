@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate-pwa-assets": "pwa-assets-generator"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.0",
@@ -18,7 +19,8 @@
     "qrcode.react": "^4.2.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "socket.io-client": "^4.7.0"
+    "socket.io-client": "^4.7.0",
+    "vite-plugin-pwa": "^1.3.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.0",
@@ -28,6 +30,7 @@
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.4.0",
     "jsdom": "^24.1.0",
