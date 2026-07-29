@@ -10,7 +10,9 @@ describe("player:joinRoom", () => {
     cleanup = undefined;
   });
 
-  async function setup() {
+  async function setup(
+    createPayload: { mode: "individual" | "team"; teams?: { id: string; name: string }[] } = { mode: "individual" }
+  ) {
     const { httpServer, io, roomManager } = createServer();
     await new Promise<void>((resolve) => httpServer.listen(0, resolve));
     const address = httpServer.address();
@@ -20,7 +22,7 @@ describe("player:joinRoom", () => {
     const host: Socket = ioClient(url);
     await new Promise<void>((resolve) => host.on("connect", resolve));
     const { code } = await new Promise<{ code: string }>((resolve) => {
-      host.emit("host:createRoom", { mode: "individual" }, resolve);
+      host.emit("host:createRoom", createPayload, resolve);
     });
 
     cleanup = () => {
@@ -153,6 +155,41 @@ describe("player:joinRoom", () => {
     expect(response.activeRound?.puzzleId).toBe("p1");
     expect(response.boardView?.topSolved).toBe(0);
     secondConnection.close();
+  });
+
+  it("returns the player's teamId on reconnect, so the client can restore it", async () => {
+    const { url, code, roomManager } = await setup({ mode: "team", teams: [{ id: "t1", name: "Red Team" }] });
+    const firstConnection: Socket = ioClient(url);
+    await new Promise<void>((resolve) => firstConnection.on("connect", resolve));
+    await new Promise<void>((resolve) =>
+      firstConnection.emit("player:joinRoom", { code, nickname: "Alex" }, () => resolve())
+    );
+    await new Promise<void>((resolve) =>
+      firstConnection.emit("player:selectTeam", { teamId: "t1" }, () => resolve())
+    );
+    roomManager.getRoom(code)!.setConnected(firstConnection.id!, false);
+    firstConnection.close();
+
+    const secondConnection: Socket = ioClient(url);
+    await new Promise<void>((resolve) => secondConnection.on("connect", resolve));
+    const response = await new Promise<{ success: boolean; teamId?: string | null }>((resolve) => {
+      secondConnection.emit("player:joinRoom", { code, nickname: "Alex" }, resolve);
+    });
+
+    expect(response.teamId).toBe("t1");
+    secondConnection.close();
+  });
+
+  it("returns teamId: null for a brand new player who hasn't picked a team yet", async () => {
+    const { url, code } = await setup({ mode: "team", teams: [{ id: "t1", name: "Red Team" }] });
+    const connection: Socket = ioClient(url);
+    await new Promise<void>((resolve) => connection.on("connect", resolve));
+    const response = await new Promise<{ success: boolean; teamId?: string | null }>((resolve) => {
+      connection.emit("player:joinRoom", { code, nickname: "Alex" }, resolve);
+    });
+
+    expect(response.teamId).toBeNull();
+    connection.close();
   });
 });
 

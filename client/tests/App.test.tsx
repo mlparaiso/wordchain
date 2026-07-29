@@ -89,6 +89,90 @@ describe("App player reconnect", () => {
     );
   });
 
+  it("returns a reconnecting player to the lobby instead of leaving them stuck when the round ended while they were offline", async () => {
+    fakeSocket.queueJoinResponse({ success: true, mode: "individual", teams: [], teamId: null });
+    render(<App />);
+    await joinAsPlayer();
+    expect(await screen.findByText(/you're in/i)).toBeInTheDocument();
+
+    act(() => {
+      fakeSocket.trigger("round:started", {
+        puzzleId: "p1",
+        category: "Reconnect Test",
+        timeCapSeconds: 60,
+        rows: [{ index: 0, length: 3, isClue: true, text: "HOT" }],
+        startedAt: 0,
+        isLastRound: false,
+      });
+    });
+    expect(await screen.findByText("Reconnect Test")).toBeInTheDocument();
+
+    // The round ended while this player was disconnected, so the rejoin ack has no
+    // activeRound at all — without a fallback, they'd be stuck on the dead round screen.
+    fakeSocket.queueJoinResponse({ success: true, mode: "individual", teams: [], teamId: null });
+    act(() => {
+      fakeSocket.triggerReconnect();
+    });
+
+    expect(await screen.findByText(/you're in/i)).toBeInTheDocument();
+  });
+
+  it("returns a reconnecting player to the landing screen when the room no longer exists", async () => {
+    fakeSocket.queueJoinResponse({ success: true, mode: "individual", teams: [], teamId: null });
+    render(<App />);
+    await joinAsPlayer();
+    expect(await screen.findByText(/you're in/i)).toBeInTheDocument();
+
+    fakeSocket.queueJoinResponse({ success: false, error: "Room not found" });
+    act(() => {
+      fakeSocket.triggerReconnect();
+    });
+
+    expect(await screen.findByText(/host a game/i)).toBeInTheDocument();
+  });
+
+  it("restores the reconnecting player's team so their team's board updates apply to them", async () => {
+    fakeSocket.queueJoinResponse({ success: true, mode: "team", teams: [{ id: "t1", name: "Red Team" }], teamId: "t1" });
+    render(<App />);
+    await joinAsPlayer();
+
+    fakeSocket.queueJoinResponse({
+      success: true,
+      mode: "team",
+      teams: [{ id: "t1", name: "Red Team" }],
+      teamId: "t1",
+      activeRound: {
+        puzzleId: "p1",
+        category: "Reconnect Test",
+        timeCapSeconds: 60,
+        rows: [
+          { index: 0, length: 3, isClue: true, text: "HOT" },
+          { index: 1, length: 3, isClue: false },
+          { index: 2, length: 4, isClue: true, text: "KICK" },
+        ],
+        startedAt: 0,
+        isLastRound: false,
+      },
+      boardView: { topSolved: 0, bottomSolved: 2, revealedText: { 0: "HOT", 2: "KICK" }, penaltySeconds: 0 },
+    });
+    act(() => {
+      fakeSocket.triggerReconnect();
+    });
+    expect(await screen.findByText("Reconnect Test")).toBeInTheDocument();
+
+    // If myTeamId wasn't restored from the reconnect ack, this board:updated for "t1"
+    // would be filtered out as belonging to someone else.
+    act(() => {
+      fakeSocket.trigger("board:updated", {
+        entrantId: "t1",
+        view: { topSolved: 1, bottomSolved: 2, revealedText: { 0: "HOT", 1: "DOG", 2: "KICK" }, penaltySeconds: 0 },
+      });
+    });
+
+    const cells = await screen.findAllByTestId("letter-cell");
+    expect(cells.slice(3, 6).map((c) => c.textContent).join("")).toBe("DOG");
+  });
+
   it("sends players back to the landing screen when the host disconnects", async () => {
     fakeSocket.queueJoinResponse({ success: true, mode: "individual", teams: [] });
     render(<App />);

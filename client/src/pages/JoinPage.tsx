@@ -6,6 +6,7 @@ export interface JoinedData {
   nickname: string;
   mode: "individual" | "team";
   teams: { id: string; name: string }[];
+  teamId: string | null;
   activeRound?: {
     puzzleId: string;
     category: string;
@@ -46,6 +47,7 @@ export function JoinPage({ onJoined }: JoinPageProps) {
             nickname: nickname.trim(),
             mode: response.mode,
             teams: response.teams,
+            teamId: response.teamId ?? null,
             activeRound: response.activeRound,
             boardView: response.boardView,
           });

@@ -38,6 +38,7 @@ describe("JoinPage", () => {
       nickname: "Alex",
       mode: "individual",
       teams: [],
+      teamId: null,
       activeRound: undefined,
       boardView: undefined,
     });

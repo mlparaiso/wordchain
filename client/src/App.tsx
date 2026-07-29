@@ -66,14 +66,28 @@ export default function App() {
       socket.emit(
         "player:joinRoom",
         { code: playerSession.code, nickname: playerSession.nickname, sessionToken: getSessionToken() },
-        (response: JoinedData & { success: boolean }) => {
-          if (!response.success) return;
+        (response: JoinedData & { success: boolean; error?: string }) => {
+          if (!response.success) {
+            // The room's gone (host ended the session, or our grace period expired) while
+            // we were offline — nothing to rejoin, so don't leave the player stranded on
+            // whatever screen they were last on.
+            setPlayerSession(null);
+            setScreen({ name: "landing" });
+            return;
+          }
           setMode(response.mode);
           setTeams(response.teams);
+          setMyTeamId(response.teamId ?? null);
           if (response.activeRound) {
             setRoundData(response.activeRound as RoundStartedPayload);
             setReconnectBoardView((response.boardView as PublicBoardView) ?? null);
             setScreen({ name: "round", role: "player" });
+          } else {
+            // The round ended while we were offline. There's no way to know whether we
+            // should be looking at results or waiting for the next round, so land
+            // somewhere safe that picks up the next round:started on its own, rather than
+            // leaving the player stuck on a round screen that will never update again.
+            setScreen({ name: "playerLobby" });
           }
         }
       );
@@ -94,7 +108,7 @@ export default function App() {
     }
     socket.on("room:hostLeft", handleHostLeft);
     return () => {
-      socket.off("room:hostLeft");
+      socket.off("room:hostLeft", handleHostLeft);
     };
   }, []);
 
@@ -109,7 +123,7 @@ export default function App() {
     }
     socket.on("room:sessionEnded", handleSessionEnded);
     return () => {
-      socket.off("room:sessionEnded");
+      socket.off("room:sessionEnded", handleSessionEnded);
     };
   }, []);
 
@@ -154,6 +168,7 @@ export default function App() {
           setPlayerSession({ code: data.code, nickname: data.nickname });
           setMode(data.mode);
           setTeams(data.teams);
+          setMyTeamId(data.teamId);
           if (data.activeRound) {
             setRoundData(data.activeRound as RoundStartedPayload);
             setReconnectBoardView((data.boardView as PublicBoardView) ?? null);

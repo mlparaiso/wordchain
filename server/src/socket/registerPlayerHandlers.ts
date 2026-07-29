@@ -15,6 +15,7 @@ export interface JoinRoomResponse {
   error?: string;
   mode?: GameMode;
   teams?: TeamInfo[];
+  teamId?: string | null;
   activeRound?: {
     puzzleId: string;
     category: string;
@@ -68,6 +69,7 @@ export function registerPlayerHandlers(io: Server, socket: Socket, roomManager: 
           success: true,
           mode: room.mode,
           teams: room.teams,
+          teamId: reconnected.teamId,
           ...buildActiveRoundAck(room, socket.id),
         });
         return;
@@ -81,6 +83,7 @@ export function registerPlayerHandlers(io: Server, socket: Socket, roomManager: 
         success: true,
         mode: room.mode,
         teams: room.teams,
+        teamId: player.teamId,
         ...buildActiveRoundAck(room, socket.id),
       });
     }
