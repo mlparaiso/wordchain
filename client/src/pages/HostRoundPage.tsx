@@ -93,7 +93,10 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-3 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between text-white font-display font-bold">
         <span className="uppercase tracking-widest text-sm opacity-90">{roundData.category}</span>
-        <span className="font-mono tabular-nums">{elapsedSeconds}s</span>
+        <span className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]">
+          <span aria-hidden="true">⏱️</span>
+          <span className="font-mono tabular-nums">{elapsedSeconds}s</span>
+        </span>
         <Button variant="outline" size="sm" onClick={handleEndRound}>
           End Round
         </Button>

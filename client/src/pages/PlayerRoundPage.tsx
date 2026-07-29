@@ -120,16 +120,19 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
     <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink p-3 sm:p-6 flex flex-col items-center gap-4">
       <div className="flex items-center justify-between w-full max-w-md text-white font-display font-bold">
         <span className="uppercase tracking-widest text-sm opacity-90">{roundData.category}</span>
-        <span className="relative font-mono tabular-nums">
-          {elapsedSeconds + boardView.penaltySeconds}s
-          {penaltyFlashes.map((flash) => (
-            <span
-              key={flash.id}
-              className="absolute left-1/2 -top-1 -translate-x-1/2 text-red-300 text-xs font-bold animate-penalty-float pointer-events-none"
-            >
-              +{flash.amount}s
-            </span>
-          ))}
+        <span className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]">
+          <span aria-hidden="true">⏱️</span>
+          <span className="relative font-mono tabular-nums">
+            {elapsedSeconds + boardView.penaltySeconds}s
+            {penaltyFlashes.map((flash) => (
+              <span
+                key={flash.id}
+                className="absolute left-1/2 -top-1 -translate-x-1/2 text-red-300 text-xs font-bold animate-penalty-float pointer-events-none"
+              >
+                +{flash.amount}s
+              </span>
+            ))}
+          </span>
         </span>
         <button
           type="button"
