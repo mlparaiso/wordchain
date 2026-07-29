@@ -9,22 +9,15 @@ export interface ChainState {
   penaltySeconds: number;
 }
 
-// The blank(s) furthest from either clue — reached last no matter which direction a
-// player works from — get their first letter revealed for free at round start, as a
-// toehold. An odd number of blanks has one true middle; an even number splits into a
-// pair (one approached mainly from the top, one from the bottom).
-function middleBlankIndices(wordCount: number): number[] {
-  const lastBlank = wordCount - 2;
-  if (lastBlank < 1) return [];
-  const mid = (wordCount - 1) / 2;
-  return [...new Set([Math.floor(mid), Math.ceil(mid)])].filter((i) => i >= 1 && i <= lastBlank);
+// Every blank word (everything but the two given clue rows) gets its first letter
+// revealed for free at round start, as a toehold — free because it doesn't add to
+// penaltySeconds, unlike a player-triggered hint via applyHint.
+function isBlankIndex(index: number, wordCount: number): boolean {
+  return index >= 1 && index <= wordCount - 2;
 }
 
 export function createChainState(words: string[]): ChainState {
-  const revealedLetters = new Array(words.length).fill(0);
-  for (const index of middleBlankIndices(words.length)) {
-    revealedLetters[index] = 1;
-  }
+  const revealedLetters = words.map((_, index) => (isBlankIndex(index, words.length) ? 1 : 0));
   return {
     words,
     topSolved: 0,

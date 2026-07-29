@@ -106,23 +106,21 @@ describe("submitGuess", () => {
 });
 
 describe("applyHint", () => {
-  it("reveals one additional letter and adds the hint penalty", () => {
+  it("reveals one additional letter (beyond the free starting one) and adds the hint penalty", () => {
     const state = createChainState(CHAIN);
     const hinted = applyHint(state, 1);
-    expect(hinted.revealedLetters[1]).toBe(1);
+    expect(hinted.revealedLetters[1]).toBe(2); // starts at 1 (free), hint brings it to 2
     expect(hinted.penaltySeconds).toBe(HINT_PENALTY_SECONDS);
   });
 
   it("does not reveal past the word's length", () => {
-    // Row 1 (not the chain's middle blank) so this only measures applyHint's own
-    // exhaustion behavior, independent of the free starting-hint reveal below.
+    // Row 1 (DOG, length 3) already starts at 1 letter revealed for free.
     let state = createChainState(CHAIN);
-    state = applyHint(state, 1); // reveals 1 of 3
-    state = applyHint(state, 1); // reveals 2 of 3
-    state = applyHint(state, 1); // reveals 3 of 3
+    state = applyHint(state, 1); // 1 -> 2
+    state = applyHint(state, 1); // 2 -> 3 (full)
     state = applyHint(state, 1); // no-op, already fully revealed
     expect(state.revealedLetters[1]).toBe(3);
-    expect(state.penaltySeconds).toBe(HINT_PENALTY_SECONDS * 3);
+    expect(state.penaltySeconds).toBe(HINT_PENALTY_SECONDS * 2);
   });
 
   it("throws if hinting a row that is not currently active", () => {
@@ -144,43 +142,40 @@ describe("toPublicRows", () => {
 
 describe("toPublicBoardView", () => {
   it("reveals full text for solved rows and a hinted prefix for active rows", () => {
-    // Rows 1 and 4 (not CHAIN's middle blanks, 2 and 3) so this only measures the
-    // solve/hint reveal, independent of the free starting-hint reveal tested below.
+    // Row 4 (SIDE) already starts with its first letter free, so one applyHint call
+    // reveals its second letter.
     let state = createChainState(CHAIN);
     state = submitGuess(state, 1, "DOG").state; // topSolved -> 1
-    state = applyHint(state, 4); // reveal 1 letter of SIDE
+    state = applyHint(state, 4); // "S" (free) -> "SI"
 
     const view = toPublicBoardView(state);
     expect(view.revealedText[0]).toBe("HOT"); // clue
     expect(view.revealedText[1]).toBe("DOG"); // solved
-    expect(view.revealedText[4]).toBe("S"); // hinted prefix only
+    expect(view.revealedText[4]).toBe("SI"); // free first letter + one hint
     expect(view.revealedText[5]).toBe("KICK"); // clue
     expect(view.penaltySeconds).toBe(5);
   });
 
-  it("reveals nothing for an untouched non-middle row", () => {
+  it("reveals every untouched blank row's free first letter, and nothing more", () => {
     const state = createChainState(CHAIN);
     const view = toPublicBoardView(state);
-    expect(view.revealedText[1]).toBeUndefined();
-    expect(view.revealedText[4]).toBeUndefined();
+    expect(view.revealedText[1]).toBe("D");
+    expect(view.revealedText[2]).toBe("T");
+    expect(view.revealedText[3]).toBe("A");
+    expect(view.revealedText[4]).toBe("S");
   });
 });
 
 describe("createChainState starting hint", () => {
-  it("reveals the first letter of the single middle blank when there's an odd number of blanks", () => {
-    // 7 words -> blanks at indices 1-5 (5 blanks, odd) -> middle is index 3 alone.
-    const state = createChainState(["HOT", "DOG", "TAG", "ALONG", "SIDE", "WALK", "KICK"]);
-    expect(state.revealedLetters).toEqual([0, 0, 0, 1, 0, 0, 0]);
-    expect(toPublicBoardView(state).revealedText[3]).toBe("A");
+  it("reveals the first letter of every blank word, not just the clue rows", () => {
+    const state = createChainState(CHAIN); // blanks at indices 1-4
+    expect(state.revealedLetters).toEqual([0, 1, 1, 1, 1, 0]);
   });
 
-  it("reveals the first letter of both middle blanks when there's an even number of blanks", () => {
-    // CHAIN is 6 words -> blanks at indices 1-4 (4 blanks, even) -> middle is indices 2 and 3.
-    const state = createChainState(CHAIN);
-    expect(state.revealedLetters).toEqual([0, 0, 1, 1, 0, 0]);
-    const view = toPublicBoardView(state);
-    expect(view.revealedText[2]).toBe("T");
-    expect(view.revealedText[3]).toBe("A");
+  it("reveals the first letter of every blank in a longer chain too", () => {
+    // 7 words -> blanks at indices 1-5.
+    const state = createChainState(["HOT", "DOG", "TAG", "ALONG", "SIDE", "WALK", "KICK"]);
+    expect(state.revealedLetters).toEqual([0, 1, 1, 1, 1, 1, 0]);
   });
 
   it("does not charge a time penalty for the free starting reveal", () => {
