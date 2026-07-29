@@ -36,6 +36,15 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
   const [boardView, setBoardView] = useState<PublicBoardView>(
     () => initialBoardView ?? computeInitialBoardView(roundData.rows)
   );
+
+  // A transport-level reconnect doesn't unmount this page (same screen, same component
+  // instance), so the lazy useState initializer above won't re-run — without this effect,
+  // a freshly-fetched initialBoardView from the reconnect ack would be silently dropped
+  // and the player would keep looking at their stale pre-disconnect board.
+  useEffect(() => {
+    if (initialBoardView) setBoardView(initialBoardView);
+  }, [initialBoardView]);
+
   const [finished, setFinished] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [soundOn, setSoundOn] = useState(() => isSoundEnabled());
@@ -77,11 +86,11 @@ export function PlayerRoundPage({ roundData, mode, myTeamId, initialBoardView, o
     socket.on("board:typing", handleTyping);
     socket.on("round:activity", handleActivity);
     return () => {
-      socket.off("board:updated");
-      socket.off("player:chainComplete");
-      socket.off("round:results");
-      socket.off("board:typing");
-      socket.off("round:activity");
+      socket.off("board:updated", handleBoardUpdated);
+      socket.off("player:chainComplete", handleChainComplete);
+      socket.off("round:results", handleResults);
+      socket.off("board:typing", handleTyping);
+      socket.off("round:activity", handleActivity);
       clearTimeout(typingTimeout);
     };
   }, [myEntrantId, onResults]);

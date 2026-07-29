@@ -74,6 +74,31 @@ describe("PlayerRoundPage", () => {
     expect(cells.every((c) => c.textContent === "")).toBe(true);
   });
 
+  it("adopts a freshly-fetched initialBoardView after a reconnect, even though the component stayed mounted", () => {
+    // The player never unmounts across a transport-level reconnect (same screen, same
+    // component instance) — App.tsx passes down a new initialBoardView prop fetched from
+    // the server's rejoin ack, and this must actually take effect rather than being
+    // silently ignored by a lazy useState initializer that only ran once at first mount.
+    const { rerender } = render(
+      <PlayerRoundPage roundData={ROUND_DATA} mode="individual" myTeamId={null} onResults={vi.fn()} />
+    );
+    let cells = screen.getAllByTestId("letter-cell").slice(3, 6);
+    expect(cells.every((c) => c.textContent === "")).toBe(true);
+
+    rerender(
+      <PlayerRoundPage
+        roundData={ROUND_DATA}
+        mode="individual"
+        myTeamId={null}
+        initialBoardView={{ topSolved: 1, bottomSolved: 2, revealedText: { 0: "HOT", 1: "DOG", 2: "KICK" }, penaltySeconds: 0 }}
+        onResults={vi.fn()}
+      />
+    );
+
+    cells = screen.getAllByTestId("letter-cell").slice(3, 6);
+    expect(cells.map((c) => c.textContent).join("")).toBe("DOG");
+  });
+
   it("uses the team id (not the socket id) to filter updates in team mode", () => {
     render(<PlayerRoundPage roundData={ROUND_DATA} mode="team" myTeamId="t1" onResults={vi.fn()} />);
     act(() => {
