@@ -36,4 +36,16 @@ describe("Button", () => {
     await userEvent.click(screen.getByText("Go"));
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it("does not call onClick when disabled with ghost variant", async () => {
+    const onClick = vi.fn();
+    render(
+      <Button variant="ghost" disabled onClick={onClick}>
+        Go
+      </Button>
+    );
+    expect(screen.getByTestId("button")).toHaveAttribute("disabled");
+    await userEvent.click(screen.getByText("Go"));
+    expect(onClick).not.toHaveBeenCalled();
+  });
 });

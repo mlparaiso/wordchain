@@ -23,11 +23,13 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
   md: "px-6 py-3",
 };
 
+const DISABLED_CLASSES = "disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none";
+
 export function Button({ variant = "primary", size = "md", className = "", children, ...rest }: ButtonProps) {
   const base =
     variant === "ghost"
-      ? "text-sm font-semibold"
-      : `rounded-full font-display font-extrabold transition-transform duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none ${SIZE_CLASSES[size]}`;
+      ? `text-sm font-semibold ${DISABLED_CLASSES}`
+      : `rounded-full font-display font-extrabold transition-transform duration-100 ${DISABLED_CLASSES} ${SIZE_CLASSES[size]}`;
 
   return (
     <button
