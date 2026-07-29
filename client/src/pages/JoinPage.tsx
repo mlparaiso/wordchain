@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getSessionToken, getSocket } from "../socket.js";
+import { Button } from "../components/Button.js";
 
 export interface JoinedData {
   code: string;
@@ -85,14 +86,9 @@ export function JoinPage({ onJoined }: JoinPageProps) {
 
         {error && <p className="text-red-600 text-sm font-semibold">{error}</p>}
 
-        <button
-          type="button"
-          disabled={!canJoin}
-          onClick={handleJoin}
-          className="bg-chain-yellow disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_0_#e0b800] rounded-full py-3 font-display font-extrabold text-chain-locked"
-        >
+        <Button disabled={!canJoin} onClick={handleJoin} className="w-full">
           Join
-        </button>
+        </Button>
       </div>
     </div>
   );

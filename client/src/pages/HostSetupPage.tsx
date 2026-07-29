@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PUZZLE_LIBRARY, type GameMode, type Puzzle, type TeamInfo } from "@wordchain/shared";
 import { getSocket } from "../socket.js";
 import { loadCustomPuzzles } from "../customPuzzles.js";
+import { Button } from "../components/Button.js";
 
 const DIFFICULTY_ORDER: Puzzle["difficulty"][] = ["easy", "medium", "hard"];
 const DIFFICULTY_LABELS: Record<Puzzle["difficulty"], string> = {
@@ -139,14 +140,9 @@ export function HostSetupPage({ onOpenCreator, onRoomCreated }: HostSetupPagePro
           </div>
         </div>
 
-        <button
-          type="button"
-          disabled={selectedIds.size === 0}
-          onClick={handleCreateRoom}
-          className="bg-chain-yellow disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_0_#e0b800] rounded-full py-3 font-display font-extrabold text-chain-locked"
-        >
+        <Button disabled={selectedIds.size === 0} onClick={handleCreateRoom}>
           Create Room
-        </button>
+        </Button>
       </div>
     </div>
   );

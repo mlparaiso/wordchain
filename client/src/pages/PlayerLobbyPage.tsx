@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { GameMode, TeamInfo, RoundStartedPayload } from "@wordchain/shared";
 import { getSocket } from "../socket.js";
+import { Button } from "../components/Button.js";
 
 export interface PlayerLobbyPageProps {
   mode: GameMode;
@@ -44,14 +45,9 @@ export function PlayerLobbyPage({ mode, teams, onTeamSelected, onRoundStarted }:
             <h1 className="font-display text-xl font-extrabold text-chain-locked">Pick a team</h1>
             <div className="flex flex-col gap-2 w-full">
               {teams.map((team) => (
-                <button
-                  key={team.id}
-                  type="button"
-                  onClick={() => selectTeam(team.id)}
-                  className="bg-chain-yellow shadow-[0_4px_0_#e0b800] rounded-full py-2 font-display font-extrabold text-chain-locked"
-                >
+                <Button key={team.id} onClick={() => selectTeam(team.id)} className="w-full">
                   {team.name}
-                </button>
+                </Button>
               ))}
             </div>
           </>

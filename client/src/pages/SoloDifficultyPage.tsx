@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PUZZLE_LIBRARY, type Puzzle } from "@wordchain/shared";
 import { loadCustomPuzzles } from "../customPuzzles.js";
+import { Button } from "../components/Button.js";
 
 export interface SoloDifficultyPageProps {
   onPuzzleChosen: (puzzle: Puzzle) => void;
@@ -44,9 +45,9 @@ export function SoloDifficultyPage({ onPuzzleChosen, onBack }: SoloDifficultyPag
           </button>
         ))}
       </div>
-      <button type="button" onClick={onBack} className="text-white/80 text-sm font-semibold underline">
+      <Button variant="ghost" onClick={onBack}>
         Back
-      </button>
+      </Button>
     </div>
   );
 }
