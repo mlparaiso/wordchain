@@ -21,6 +21,7 @@ import { ResultsPage } from "./pages/ResultsPage.js";
 import { SoloDifficultyPage } from "./pages/SoloDifficultyPage.js";
 import { SoloRoundPage, type SoloRunSummary } from "./pages/SoloRoundPage.js";
 import { SoloResultsPage } from "./pages/SoloResultsPage.js";
+import { Button } from "./components/Button.js";
 
 export type Role = "host" | "player";
 
@@ -128,35 +129,35 @@ export default function App() {
   }, []);
 
   if (screen.name === "landing") {
+    const chainPattern =
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='30'%3E%3Cg fill='none' stroke='white' stroke-opacity='0.08' stroke-width='3'%3E%3Cellipse cx='15' cy='15' rx='10' ry='6'/%3E%3Cellipse cx='35' cy='15' rx='10' ry='6'/%3E%3C/g%3E%3C/svg%3E";
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6">
-        <div className="flex flex-col items-center gap-2">
+      <div className="relative min-h-screen bg-gradient-to-br from-chain-purple to-chain-pink flex flex-col items-center justify-center gap-6 overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: `url("${chainPattern}")`, backgroundRepeat: "repeat" }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10 flex flex-col items-center gap-3">
+          <img
+            src="/pwa-icon.svg"
+            alt=""
+            aria-hidden="true"
+            className="w-16 h-16 rounded-xl shadow-[0_4px_0_rgba(0,0,0,0.25)]"
+          />
           <h1 className="font-display text-4xl text-white font-extrabold">Word Chain</h1>
           <p className="text-white/80 font-body">Chain each word to the next — every pair makes a real phrase.</p>
         </div>
-        <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={() => setScreen({ name: "hostSetup" })}
-            className="bg-chain-yellow shadow-[0_4px_0_#e0b800] rounded-full px-6 py-3 font-display font-extrabold text-chain-locked"
-          >
-            Host a game
-          </button>
-          <button
-            type="button"
-            onClick={() => setScreen({ name: "join" })}
-            className="bg-white shadow-[0_4px_0_#cccccc] rounded-full px-6 py-3 font-display font-extrabold text-chain-locked"
-          >
+        <div className="relative z-10 flex gap-4">
+          <Button onClick={() => setScreen({ name: "hostSetup" })}>Host a game</Button>
+          <Button variant="secondary" onClick={() => setScreen({ name: "join" })}>
             Join a game
-          </button>
+          </Button>
         </div>
-        <button
-          type="button"
-          onClick={() => setScreen({ name: "soloDifficulty" })}
-          className="text-white/80 text-sm font-semibold underline"
-        >
+        <Button variant="ghost" className="relative z-10" onClick={() => setScreen({ name: "soloDifficulty" })}>
           Practice Solo
-        </button>
+        </Button>
       </div>
     );
   }
