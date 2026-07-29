@@ -3,6 +3,7 @@ import confetti from "canvas-confetti";
 import type { RoundResult, RoundStartedPayload } from "@wordchain/shared";
 import { getSocket } from "../socket.js";
 import { useCountUp } from "../useCountUp.js";
+import { Button } from "../components/Button.js";
 
 export interface ResultsPageProps {
   results: RoundResult[];
@@ -13,12 +14,22 @@ export interface ResultsPageProps {
   onNextRoundStarted?: (payload: RoundStartedPayload) => void;
 }
 
+const MEDAL_EMOJI: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+
 function LeaderboardRow({ rank, displayName, total }: { rank: number; displayName: string; total: number }) {
   const animatedTotal = useCountUp(total);
+  const isPodium = rank <= 3;
   return (
-    <div className="flex items-center justify-between">
-      <span className="font-display font-bold text-chain-locked">
-        {rank}. {displayName}
+    <div
+      className={`flex items-center justify-between rounded-xl px-3 py-2 ${
+        isPodium ? "bg-chain-yellow/15 shadow-[0_2px_0_rgba(224,184,0,0.25)]" : ""
+      }`}
+    >
+      <span className="font-display font-bold text-chain-locked flex items-center gap-2">
+        <span className={isPodium ? "text-xl" : "w-5 text-center text-chain-locked/60"}>
+          {MEDAL_EMOJI[rank] ?? `${rank}.`}
+        </span>
+        {displayName}
       </span>
       <span className="font-mono font-bold text-chain-purple tabular-nums">{animatedTotal} pts</span>
     </div>
@@ -64,18 +75,16 @@ export function ResultsPage({ results, totals, role, isLastRound, onAdvance, onN
       </div>
 
       {role === "host" && (
-        <button
-          type="button"
+        <Button
           disabled={advancing}
           onClick={() => {
             if (advancing) return;
             setAdvancing(true);
             onAdvance?.();
           }}
-          className="bg-chain-yellow disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_0_#e0b800] rounded-full px-8 py-3 font-display font-extrabold text-chain-locked"
         >
           {isLastRound ? "End Session" : "Next Round"}
-        </button>
+        </Button>
       )}
     </div>
   );

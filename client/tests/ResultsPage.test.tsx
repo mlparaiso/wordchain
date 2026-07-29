@@ -34,7 +34,7 @@ describe("ResultsPage", () => {
   it("shows entrants ranked by total points, highest first", () => {
     render(<ResultsPage results={RESULTS} totals={TOTALS} role="player" isLastRound={false} />);
     const names = screen.getAllByText(/Alex|Sam/).map((el) => el.textContent);
-    expect(names).toEqual(["1. Alex", "2. Sam"]);
+    expect(names).toEqual(["🥇Alex", "🥈Sam"]);
   });
 
   it("shows a Round Results heading and no confetti for a normal round", () => {
