@@ -104,7 +104,7 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
           {entrantIds.map((entrantId) => {
             const view = boards[entrantId] ?? defaultBoardView();
             return (
-              <div key={entrantId} className="bg-white/90 rounded-xl p-3">
+              <div key={entrantId} className="bg-white rounded-xl p-3 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
                 <p className="font-display font-bold text-chain-locked text-sm mb-2">{displayName(entrantId)}</p>
                 <div className="flex flex-col gap-2">
                   <p className="font-display font-bold text-chain-locked text-sm uppercase tracking-wide">
@@ -119,7 +119,9 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
                           data-testid="host-progress-box"
                           data-state={solved ? "solved" : "pending"}
                           className={`w-6 h-6 rounded-md ${
-                            solved ? "bg-chain-green" : "bg-white/60 border-2 border-dashed border-chain-locked/30"
+                            solved
+                              ? "bg-chain-green shadow-[0_2px_0_#2fa350]"
+                              : "bg-white/60 border-2 border-dashed border-chain-locked/30"
                           }`}
                         />
                       );
