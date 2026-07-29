@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import type { Puzzle } from "@wordchain/shared";
 import { submitGuess } from "@wordchain/shared";
 import { Room } from "../src/rooms/Room.js";
-import { computeRoundResults } from "../src/rooms/scoreRound.js";
+import { computeRoundResults, endRound } from "../src/rooms/scoreRound.js";
+import { createServer } from "../src/index.js";
 
 const PUZZLE: Puzzle = {
   id: "test-puzzle",
@@ -52,5 +53,32 @@ describe("computeRoundResults", () => {
     const p2 = results.find((r) => r.entrantId === "p2")!;
     expect(p1.points).toBe(1000);
     expect(p2.points).toBe(500);
+  });
+});
+
+describe("endRound", () => {
+  let cleanup: (() => void) | undefined;
+
+  afterEach(() => {
+    cleanup?.();
+    cleanup = undefined;
+  });
+
+  it("still ends the round and notifies clients even if scoring throws unexpectedly", () => {
+    const { io } = createServer();
+    cleanup = () => io.close();
+
+    const room = new Room("BLUE-42", "host-1");
+    room.addPlayer("p1", "Alex");
+    // A puzzle with no blanks at all isn't something host:startRound would normally
+    // accept (validatePuzzleWords requires at least one), but Room.startRound itself
+    // doesn't re-validate — this reproduces an unexpected totalBlanks<=0 the same way
+    // any future scoring bug could, to prove endRound survives it (no try/catch existed
+    // in this chain before) instead of crashing the entire process via an unhandled
+    // exception inside a setTimeout callback.
+    room.startRound({ id: "p1", category: "Test", difficulty: "easy", words: ["HOT", "KICK"], timeCapSeconds: 60 });
+
+    expect(() => endRound(io, room)).not.toThrow();
+    expect(room.currentRound).toBeNull();
   });
 });

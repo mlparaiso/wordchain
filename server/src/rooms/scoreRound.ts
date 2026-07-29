@@ -50,7 +50,19 @@ export function endRound(io: Server, room: Room): void {
 
   if (room.currentRound.timeoutHandle) clearTimeout(room.currentRound.timeoutHandle);
 
-  const results = computeRoundResults(room);
+  // endRound can be called from an unguarded setTimeout callback (the round's own time
+  // cap firing), so an exception here has nowhere else to be caught — left unhandled, it
+  // would crash the entire process, taking down every other room's game with it. Scoring
+  // failing shouldn't be able to do that: log it, end the round with no points awarded,
+  // and let the game continue rather than bringing the server down.
+  let results: RoundResult[];
+  try {
+    results = computeRoundResults(room);
+  } catch (err) {
+    console.error(`Failed to score round for room ${room.code}:`, err);
+    results = [];
+  }
+
   for (const result of results) {
     const previous = room.totalPoints.get(result.entrantId) ?? 0;
     room.totalPoints.set(result.entrantId, previous + result.points);
