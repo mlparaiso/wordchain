@@ -23,9 +23,15 @@ export default {
           "80%": { opacity: "1", transform: "translateY(-14px)" },
           "100%": { opacity: "0", transform: "translateY(-22px)" },
         },
+        "tile-pop": {
+          "0%": { transform: "scale(0.85)" },
+          "60%": { transform: "scale(1.08)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "penalty-float": "penalty-float 1.1s ease-out forwards",
+        "tile-pop": "tile-pop 220ms ease-out",
       },
     },
   },
