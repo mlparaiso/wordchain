@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { validatePuzzleWords } from "@wordchain/shared";
+import { Button } from "../components/Button.js";
 import { saveCustomPuzzle } from "../customPuzzles.js";
 
 export interface CustomPuzzleCreatorPageProps {
@@ -59,13 +60,9 @@ export function CustomPuzzleCreatorPage({ onSaved, onCancel }: CustomPuzzleCreat
         </label>
         {error && <p className="text-red-600 text-sm font-semibold">{error}</p>}
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleSave}
-            className="bg-chain-yellow shadow-[0_4px_0_#e0b800] rounded-full px-6 py-2 font-display font-extrabold text-chain-locked"
-          >
+          <Button onClick={handleSave} size="sm">
             Save Puzzle
-          </button>
+          </Button>
           <button type="button" onClick={onCancel} className="text-chain-locked/60 text-sm font-semibold">
             Cancel
           </button>

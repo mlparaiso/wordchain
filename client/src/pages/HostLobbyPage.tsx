@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import type { Puzzle, PlayerInfo } from "@wordchain/shared";
+import { Button } from "../components/Button.js";
 import { getSocket } from "../socket.js";
 
 export interface HostLobbyPageProps {
@@ -88,14 +89,9 @@ export function HostLobbyPage({ roomCode, playlist, onStarted }: HostLobbyPagePr
         </ul>
       </div>
 
-      <button
-        type="button"
-        onClick={handleStart}
-        disabled={starting}
-        className="bg-chain-yellow disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_0_#e0b800] rounded-full px-8 py-3 font-display font-extrabold text-chain-locked"
-      >
+      <Button onClick={handleStart} disabled={starting}>
         Start Game
-      </button>
+      </Button>
     </div>
   );
 }

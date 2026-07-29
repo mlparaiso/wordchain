@@ -9,6 +9,7 @@ import type {
   TeamInfo,
 } from "@wordchain/shared";
 import { ActivityFeed, type ActivityEntry } from "../components/ActivityFeed.js";
+import { Button } from "../components/Button.js";
 import { getSocket } from "../socket.js";
 
 const MAX_ACTIVITY_ENTRIES = 30;
@@ -93,13 +94,9 @@ export function HostRoundPage({ roundData, mode, teams, players, onResults }: Ho
       <div className="flex items-center justify-between text-white font-display font-bold">
         <span className="uppercase tracking-widest text-sm opacity-90">{roundData.category}</span>
         <span className="font-mono tabular-nums">{elapsedSeconds}s</span>
-        <button
-          type="button"
-          onClick={handleEndRound}
-          className="bg-white/20 border-2 border-white rounded-full px-4 py-1 text-sm"
-        >
+        <Button variant="outline" size="sm" onClick={handleEndRound}>
           End Round
-        </button>
+        </Button>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
