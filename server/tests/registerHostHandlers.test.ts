@@ -86,5 +86,41 @@ describe("host:createRoom", () => {
       expect(response.error).toMatch(/host/i);
       impostor.close();
     });
+
+    it("rejects kicking a socket that isn't a player in the caller's own room", async () => {
+      const { client: hostA, url, roomManager } = await connectClient();
+      const { code: codeA } = await new Promise<{ code: string }>((resolve) => {
+        hostA.emit("host:createRoom", { mode: "individual" }, resolve);
+      });
+
+      // A second, unrelated room — the victim is a real player, just not hostA's.
+      const hostB: Socket = ioClient(url);
+      await new Promise<void>((resolve) => hostB.on("connect", resolve));
+      const { code: codeB } = await new Promise<{ code: string }>((resolve) => {
+        hostB.emit("host:createRoom", { mode: "individual" }, resolve);
+      });
+      const victim: Socket = ioClient(url);
+      await new Promise<void>((resolve) => victim.on("connect", resolve));
+      await new Promise<void>((resolve) =>
+        victim.emit("player:joinRoom", { code: codeB, nickname: "Victim" }, () => resolve())
+      );
+
+      let victimDisconnected = false;
+      victim.once("disconnect", () => {
+        victimDisconnected = true;
+      });
+      const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+        hostA.emit("host:kickPlayer", { socketId: victim.id }, resolve);
+      });
+
+      expect(response.success).toBe(false);
+      expect(roomManager.getRoom(codeB)?.getPlayers()).toHaveLength(1);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(victimDisconnected).toBe(false);
+      expect(roomManager.getRoom(codeA)).toBeDefined();
+
+      hostB.close();
+      victim.close();
+    });
   });
 });

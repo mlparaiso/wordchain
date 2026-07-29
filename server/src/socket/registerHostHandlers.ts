@@ -38,6 +38,10 @@ export function registerHostHandlers(io: Server, socket: Socket, roomManager: Ro
         callback({ success: false, error: "Only the host can kick players" });
         return;
       }
+      if (!room.getPlayers().some((p) => p.socketId === payload.socketId)) {
+        callback({ success: false, error: "That player is not in your room" });
+        return;
+      }
       room.removePlayer(payload.socketId);
       io.to(room.code).emit("room:playerLeft", { socketId: payload.socketId });
       io.sockets.sockets.get(payload.socketId)?.disconnect(true);
